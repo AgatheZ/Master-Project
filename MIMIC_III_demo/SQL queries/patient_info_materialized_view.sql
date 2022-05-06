@@ -19,7 +19,7 @@ SELECT ie.subject_id, ie.hadm_id, ie.icustay_id
     ELSE False END AS first_icu_stay
 
 -- diagnosis
-, diag.short_title AS diagnosis
+, diag.long_title AS diagnosis
 
 FROM mimiciiid.icustays ie
 
@@ -33,7 +33,7 @@ INNER JOIN mimiciiid.d_icd_diagnoses diag
     ON jt.icd9_code = diag.icd9_code
 
 --- only select the most important diagnosis 
-WHERE jt.seq_num = 1
+--WHERE jt.seq_num = 1
 
 ORDER BY ie.subject_id, adm.admittime, ie.intime
 

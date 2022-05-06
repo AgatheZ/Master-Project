@@ -1,7 +1,7 @@
 WITH transformed AS
 (
 SELECT diagnosis,
-case when diagnosis LIKE '%hemor%' then 'Hemorrhage'
+case when diagnosis LIKE '%brain injury%' then 'Brain'
 else 'Other diagnosis' end as diag
 
 FROM public.patient_info
