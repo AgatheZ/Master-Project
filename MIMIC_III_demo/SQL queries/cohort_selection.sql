@@ -7,5 +7,7 @@ ce.icustay_id -- for each icustay_id
 FROM mimiciiid.chartevents ce
 INNER JOIN mimiciiid.d_items di
 ON ce.itemid = di.itemid
+JOIN `mimic_iii_staging.feature_lookup` fl
+on di.itemid = fl.item_code
 
-WHERE (di.LABEL) = 'ICP ventricle'
+WHERE lower(di.LABEL) like '%ICP%'
