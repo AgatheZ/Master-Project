@@ -1,10 +1,10 @@
-SELECT age AS val, COUNT(1) AS age from public.patient_info
+SELECT age AS val, COUNT(1) AS age FROM public.patient_info
 GROUP BY age
 ORDER BY val;
 
-SELECT diagnosis, count(1) from public.patient_info
+SELECT diagnosis, COUNT(1) FROM public.patient_info
 GROUP BY diagnosis
-HAVING count(1) > 1;
+HAVING COUT(1) > 1;
 
 SELECT COUNT(1), gender FROM public.patient_info 
 GROUP BY gender;
