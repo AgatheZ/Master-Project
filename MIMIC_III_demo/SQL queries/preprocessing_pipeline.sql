@@ -72,11 +72,28 @@ ORDER BY icustay_id, minute_from_intime;
 DROP TABLE IF EXISTS  mimiciiid.preprocessed CASCADE;
 CREATE TABLE  mimiciiid.preprocessed
 AS
-SELECT icustay_id,   icu_intime, minute_from_intime,
+(
+WITH transition 
+AS
+(
+SELECT icustay_id,   icu_intime,  minute_from_intime ,
     round(CASE WHEN feature_name = 'Heart Rate' THEN feature_mean_value END, 2) AS "Heart Rate",
-    round(CASE WHEN feature_name = 'Oxygen Saturation' THEN feature_mean_value END, 2) AS "Oxygen_Saturation",
+    round(CASE WHEN feature_name = 'Oxygen Saturation' THEN feature_mean_value END, 2) AS "Oxygen Saturation",
     round(CASE WHEN feature_name = 'Mean Arterial Pressure ' THEN feature_mean_value END, 2) AS "MAP",
     round(CASE WHEN feature_name = 'Intracranial Pressure' THEN feature_mean_value END, 2) AS "Intracranial Pressure"
-       
-FROM mimiciiid.aggregated_vitals ;
+
+FROM mimiciiid.aggregated_vitals
+ORDER BY icustay_id, minute_from_intime
+)
+
+SELECT  icustay_id,     icu_intime     ,  minute_from_intime  , sum("Heart Rate") AS Heart_rate , sum("Oxygen Saturation") AS Oxygen_saturation, sum("MAP") AS MAP , sum("Intracranial Pressure") AS ICP
+FROM transition
+GROUP BY  icustay_id,     icu_intime     ,  minute_from_intime
+ORDER BY icustay_id, minute_from_intime
+);
+
+SELECT * FROM mimiciiid.preprocessed;
+
+
+
 
