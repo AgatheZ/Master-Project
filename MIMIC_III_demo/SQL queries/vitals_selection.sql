@@ -1,3 +1,4 @@
+
 CREATE TABLE mimiciiid.cohort_vitals
 AS
 
