@@ -1,8 +1,19 @@
-
 --- Filter the vitals using the lookup.csv we created 
 DROP TABLE IF EXISTS mimiciiid.lookup CASCADE;
-CREATE TABLE mimiciiid.lookup (final varchar(50), original varchar(50), item_code varchar(7), units varchar(10));
+CREATE TABLE mimiciiid.lookup (final varchar(50), original varchar(50), item_code integer, units varchar(10));
 COPY mimiciiid.lookup(final, original, item_code, units) FROM 'lookup_table.csv' delimiter ',' CSV HEADER;
+
+
+DROP TABLE IF EXISTS mimiciiid.cohort_vitals;
+CREATE TABLE mimiciiid.cohort_vitals
+AS
+
+SELECT
+ce.icustay_id,ce.charttime ,fl.final as vital_name, ce.value as vital_reading 
+
+FROM mimiciiid.chartevents ce 
+JOIN mimiciiid.lookup fl 
+ON fl.item_code = ce.itemid ;
 
 --- Creating a table that contains vitals range using the vital_range.csv we created 
 DROP TABLE IF EXISTS mimiciiid.vital_range CASCADE;
@@ -17,8 +28,8 @@ AS
 SELECT
 vs.icustay_id, vs.charttime, vs.vital_name, 
 CASE
-WHEN CAST(vs.vital_reading AS integer) < low or CAST(vs.vital_reading AS integer)> high then Null
-ELSE CAST(vs.vital_reading AS integer)
+WHEN CAST(vs.vital_reading AS NUMERIC) < low or CAST(vs.vital_reading AS NUMERIC)> high then Null
+ELSE CAST(vs.vital_reading AS NUMERIC)
 END AS outlier_handled_vital_reading 
 
 FROM mimiciiid.cohort_vitals vs
@@ -44,7 +55,7 @@ FROM
 mimiciiid.vitals_w_outliers vit
 LEFT JOIN  mimiciiid.icustays icu
 ON vit.icustay_id = icu.ICUSTAY_ID
-),
+WHERE icu.los >= 1), -- Only take patients with records > 24h
 
 aggregated 
 AS
@@ -80,7 +91,9 @@ SELECT icustay_id,   icu_intime,  minute_from_intime ,
     round(CASE WHEN feature_name = 'Heart Rate' THEN feature_mean_value END, 2) AS "Heart Rate",
     round(CASE WHEN feature_name = 'Oxygen Saturation' THEN feature_mean_value END, 2) AS "Oxygen Saturation",
     round(CASE WHEN feature_name = 'Mean Arterial Pressure ' THEN feature_mean_value END, 2) AS "MAP",
-    round(CASE WHEN feature_name = 'Intracranial Pressure' THEN feature_mean_value END, 2) AS "Intracranial Pressure"
+    round(CASE WHEN feature_name = 'Intracranial Pressure' THEN feature_mean_value END, 2) AS "Intracranial Pressure",
+    round(CASE WHEN feature_name = 'CPP' THEN feature_mean_value END, 2) AS "CPP"
+
 
 FROM mimiciiid.aggregated_vitals
 ORDER BY icustay_id, minute_from_intime
@@ -90,10 +103,10 @@ SELECT  icustay_id,     icu_intime     ,  minute_from_intime  , sum("Heart Rate"
 FROM transition
 GROUP BY  icustay_id,     icu_intime     ,  minute_from_intime
 ORDER BY icustay_id, minute_from_intime
-);
+); 
 
-SELECT * FROM mimiciiid.preprocessed;
-
+SELECT * FROM mimiciiid.preprocessed order by icustay_id, minute_from_intime;
+-- Don't forget to save it again as a csv if changes are made to the pipeline 
 
 
 
