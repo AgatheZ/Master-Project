@@ -9,7 +9,7 @@ CREATE TABLE mimiciiid.cohort_vitals
 AS
 
 SELECT
-ce.icustay_id,ce.charttime ,fl.final as vital_name, ce.value as vital_reading 
+ce.icustay_id,ce.charttime ,fl.final as vital_name, ROUND(CAST(ce.value as numeric), 2)  as vital_reading 
 
 FROM mimiciiid.chartevents ce 
 JOIN mimiciiid.lookup fl 
@@ -28,8 +28,8 @@ AS
 SELECT
 vs.icustay_id, vs.charttime, vs.vital_name, 
 CASE
-WHEN CAST(vs.vital_reading AS NUMERIC) < low or CAST(vs.vital_reading AS NUMERIC)> high then Null
-ELSE CAST(vs.vital_reading AS NUMERIC)
+WHEN CAST(vs.vital_reading AS integer) < low or CAST(vs.vital_reading AS integer)> high then Null
+ELSE CAST(vs.vital_reading AS integer)
 END AS outlier_handled_vital_reading 
 
 FROM mimiciiid.cohort_vitals vs
@@ -99,7 +99,7 @@ FROM mimiciiid.aggregated_vitals
 ORDER BY icustay_id, minute_from_intime
 )
 
-SELECT  icustay_id,     icu_intime     ,  minute_from_intime  , sum("Heart Rate") AS Heart_rate , sum("Oxygen Saturation") AS Oxygen_saturation, sum("MAP") AS MAP , sum("Intracranial Pressure") AS ICP
+SELECT  icustay_id,     icu_intime     ,  minute_from_intime  , sum("Heart Rate") AS Heart_rate , sum("Oxygen Saturation") AS Oxygen_saturation, sum("MAP") AS MAP , sum("Intracranial Pressure") AS ICP, sum("CPP") AS CPP
 FROM transition
 GROUP BY  icustay_id,     icu_intime     ,  minute_from_intime
 ORDER BY icustay_id, minute_from_intime
