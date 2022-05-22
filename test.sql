@@ -1,0 +1,1 @@
+SELECT stay_id, icu_intime, feature_name, round(feature_mean_value, 2), hour_from_intime FROM mimiciv.aggregated_vitals;
