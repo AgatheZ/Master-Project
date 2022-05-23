@@ -14,7 +14,7 @@ ON v.hadm_id = ce.hadm_id
 JOIN mimic_hosp.d_icd_diagnoses d 
 ON v.icd_code = d.icd_code
 
-WHERE (fl.param_type = 'Numeric') AND ((fl.category != 'Alarms') AND ((d.icd_code LIKE '95901%') OR (d.icd_code LIKE '850%') OR (d.icd_code LIKE '851%') OR (d.icd_code LIKE '852%') OR (d.icd_code LIKE '853%') OR (d.icd_code LIKE '854%')));
+WHERE (fl.param_type = 'Numeric') AND (((fl.category != 'Alarms') AND (fl.category != 'General')) AND ((d.icd_code LIKE '95901%') OR (d.icd_code LIKE '850%') OR (d.icd_code LIKE '851%') OR (d.icd_code LIKE '852%') OR (d.icd_code LIKE '853%') OR (d.icd_code LIKE '854%')));
 
 --- Outlier removal that we dont do for now 
 /* Creating a table that contains vitals range using the vital_range.csv we created 
@@ -59,7 +59,7 @@ FROM
 mimiciv.cohort_vitals vit
 LEFT JOIN  mimic_icu.icustays icu
 ON vit.stay_id = icu.stay_id
-WHERE icu.los >= 1) , -- Only take patients with records > 24h
+WHERE icu.los >= 2) , -- Only take patients with records > 48h
 
 
 aggregated 
@@ -119,5 +119,15 @@ SELECT * FROM mimiciv.preprocessed order by icustay_id, hour_from_intime;
 
 
 */
+---Get demographic table 
+SELECT DISTINCT v.stay_id, p.gender, p.anchor_age AS age, ROUND(hw.weight_first / POWER(hw.height_first / 100, 2), 3) AS BMI
+FROM mimiciv.aggregated_vitals v
+JOIN mimic_icu.icustays icu ON v.stay_id = icu.stay_id
+JOIN mimic_core.patients p ON p.subject_id = icu.subject_id
+JOIN mimiciv.heightweight hw ON hw.stay_id = icu.stay_id
 
+ORDER BY stay_id ;
+
+
+---Get vitals table 
 SELECT stay_id, icu_intime, feature_name, round(feature_mean_value, 2), hour_from_intime FROM mimiciv.aggregated_vitals;
