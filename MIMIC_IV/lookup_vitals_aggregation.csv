@@ -1,0 +1,115 @@
+vital_name,aggregation
+HR,1
+RR,1
+SpO2,1
+ABPm,1
+ABPd,1
+ABPs,1
+Anion gap,24
+BUN,24
+Chloride (serum),24
+Creatinine (serum),24
+Glucose (serum),24
+HCO3 (serum),24
+Hematocrit (serum),24
+Hemoglobin,24
+Platelet Count,24
+Potassium (serum),24
+Sodium (serum),24
+WBC,24
+Magnesium,24
+Calcium non-ionized,24
+Phosphorous,24
+Temperature F,24
+NBPs,24
+NBPd,24
+NBPm,24
+INR,24
+PT,24
+PTT,24
+Glucose FS (range 70 -100),24
+FiO2,48
+PH (Arterial),48
+TCO2 (calc) Arterial,48
+Arterial Base Excess,48
+PCO2 (Arterial),48
+PO2 (Arterial),48
+O2 Flow,48
+Apnea Interval,48
+Minute Volume,48
+Paw High,48
+PEEP set,48
+Mean Airway Pressure,48
+Tidal Volume (observed),48
+Vti High,48
+Peak Insp. Pressure,48
+Fspn High,48
+Respiratory Rate (spontaneous),48
+Respiratory Rate (Total),48
+Lactic Acid,48
+IT,48
+Respiratory Rate (Set),48
+Tidal Volume (set),48
+Ventilator Tank #2,48
+Ventilator Tank #1,48
+Expiratory Ratio,48
+Inspiratory Ratio,48
+Plateau Pressure,48
+PSV Level,48
+Tidal Volume (spontaneous),48
+Ionized Calcium,48
+Cuff Pressure,48
+Total PEEP Level,48
+ALT,48
+AST,48
+Alkaline Phosphate,48
+Total Bilirubin,48
+Albumin,48
+Glucose (whole blood),48
+PH (dipstick),48
+Specific Gravity (urine),48
+Spont RR,48
+Spont Vt,48
+Troponin-T,48
+CK (CPK),48
+Acetaminophen-IV,one-hot
+Calcium Gluconate,one-hot
+Cefazolin,one-hot
+Cefepime,one-hot
+D5 1/2NS,one-hot
+Dextrose 5%,one-hot
+Dilantin,one-hot
+Famotidine (Pepcid),one-hot
+Fentanyl,one-hot
+Fentanyl (Concentrate),one-hot
+Furosemide (Lasix),one-hot
+GT Flush,one-hot
+Gastric Meds,one-hot
+Heparin Sodium (Prophylaxis),one-hot
+Hydralazine,one-hot
+Hydromorphone (Dilaudid),one-hot
+Insulin - Humalog,one-hot
+Insulin - Regular,one-hot
+K Phos,one-hot
+KCL (Bolus),one-hot
+LR,one-hot
+Labetalol,one-hot
+Levetiracetam (Keppra),one-hot
+Lorazepam (Ativan),one-hot
+Magnesium Sulfate,one-hot
+Magnesium Sulfate (Bolus),one-hot
+Metoprolol,one-hot
+Midazolam (Versed),one-hot
+Morphine Sulfate,one-hot
+NaCl 0.9%,one-hot
+OR Crystalloid Intake,one-hot
+PO Intake,one-hot
+PRBC's,one-hot
+Pantoprazole (Protonix),one-hot
+Phenylephrine,one-hot
+Piggyback,one-hot
+Potassium Chloride - KCL,one-hot
+Pre-Admission/Non-ICU Intake,one-hot
+Propofol,one-hot
+Thiamine,one-hot
+Vancomycin,one-hot

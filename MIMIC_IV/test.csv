@@ -1,0 +1,339 @@
+feature_name,percent_missing
+% Minute Volume,99.99139803
+ABI Ankle BP L ,99.99784951
+ABI Ankle BP R,99.99784951
+ABI Brachial BP L,99.99784951
+ABI Brachial BP R ,99.99784951
+ABPd,65.98137674
+ABPm,65.73407024
+ABPs,65.97707576
+Absolute Count - Basos,99.90537838
+Absolute Count - Eos,99.90537838
+Absolute Count - Lymphs,99.90537838
+Absolute Count - Monos,99.90537838
+Absolute Count - Neuts,99.90537838
+Absolute Neutrophil Count,99.98494656
+Access Pressure,99.74839251
+ACT,99.98709705
+Activity HR - Aerobic Capacity,99.99569902
+Activity RR - Aerobic Activity Response,99.99784951
+Activity RR - Aerobic Capacity,99.99569902
+Albumin,98.88604546
+Alkaline Phosphate,98.63013699
+ALT,98.58497667
+Ammonia,99.98494656
+Amylase,99.75269349
+Anion gap,92.89477646
+Apache IV A-aDO2,99.99784951
+APACHEIII,99.99354853
+ApacheIV_LOS,99.99354853
+Apnea Interval,88.96582869
+Arctic Sun Water Temp,99.46022666
+Arctic Sun/Alsius Set Temp,99.36560504
+Arctic Sun/Alsius Temp #1 C,99.13550246
+Arctic Sun/Alsius Temp #2 C,99.26453195
+ART BP Diastolic,97.56994473
+ART BP Mean,97.55919228
+ART BP Systolic,97.56779424
+ART Lumen Volume,99.93548526
+Arterial Base Excess,94.65172792
+AST,98.58712716
+ATC %,99.98709705
+AUG,99.56560074
+Baseline Current/mA,99.77849939
+BiPap EPAP,99.94193673
+BiPap IPAP,99.94838821
+BiPap O2 Flow,99.94838821
+Bladder Pressure,99.90322789
+Bladder Scan Estimate,99.97849509
+Blood Flow (ml/min),99.74839251
+Blood Temp CCO (C),98.67529731
+Brain Natiuretic Peptide (BNP),99.9505387
+BUN,92.86466958
+C Reactive Protein (CRP),99.98494656
+Calcium non-ionized,93.32272424
+Cardiac Index (CI NICOM),99.81505774
+Cardiac Output (CO NICOM),99.83226167
+Central Venous O2% Sat,99.96129116
+Cerebral T (C),99.85376659
+CFI (PiCCO),99.98279607
+Chloride (serum),92.38080901
+Chloride (whole blood),99.33764865
+Cholesterol,99.92688329
+CI (PiCCO),99.89462592
+Citrate (ACD-A),99.74624202
+CK (CPK),98.40433539
+CK-MB,98.625836
+CK-MB fraction (%),99.63656696
+CO (Arterial),99.76344595
+CO (CCO),98.73981205
+CO (PiCCO),99.93763575
+CO (thermodilution),99.83011118
+CO / CI Change,99.98064558
+CO2 production,99.86666953
+Compliance,99.86666953
+Cortisol,99.91828133
+CPP,97.7269306
+Creatinine (serum),92.84531515
+Creatinine (whole blood),99.99784951
+Cuff Pressure,97.68392078
+Cuff Volume (mL),99.90967936
+Current Goal,99.72903809
+Current Used/mA,99.69247973
+CVP,93.06251478
+D-Dimer,99.97849509
+DIA - Assisted,99.57420271
+DIA - Unassisted,99.56990172
+Dialysate Rate,99.73548956
+Differential - Immature Granulocytes,99.93763575
+Differential-Atyps,99.83871315
+Differential-Bands,99.81505774
+Differential-Basos,99.25377949
+Differential-Eos,99.25377949
+Differential-Lymphs,99.25377949
+Differential-Monos,99.25377949
+Differential-Neuts,99.25377949
+Digoxin,99.9505387
+Direct Bilirubin,99.90322789
+Doppler BP,99.99784951
+Dwell Time (Hours),99.95914066
+Effluent Pressure,99.74839251
+ELWI (PiCCO),99.95268919
+Epidural Bolus (mL),99.87097052
+Epidural Infusion Rate (mL/hr),99.61721253
+Epidural Total Dose (mL),99.93763575
+EtCO2,99.75914496
+Expiratory Ratio,93.67325434
+Fibrinogen,99.38926045
+Filter Pressure,99.74839251
+FiO2,84.73366164
+FK506,99.97849509
+Flow Rate (L/min),99.25592998
+Fspn High,89.82387476
+GEDI (PiCCO),99.94408722
+Gentamicin (Random),99.99569902
+GI #1 Tube Mark (CM),99.34840111
+GI #2 Tube Mark (CM),99.98709705
+GI pH,99.98494656
+Glucose (serum),92.77434894
+Glucose (whole blood),97.67531881
+Glucose FS (range 70 -100),89.87548655
+HCO3 (serum),92.88187351
+HDL,99.92688329
+Hematocrit (serum),92.2087697
+Hematocrit (whole blood - calc),99.18711426
+Hemodialysis Output,99.9505387
+Hemoglobin,92.9076794
+Heparin Dose (per hour),99.89462592
+Hourly PFR,99.73548956
+HR,7.993376487
+IABP Volume,99.91182985
+IC2,99.94623772
+ICP,97.48392508
+INR,95.22160814
+Inspiratory Ratio,93.72056515
+Inspired Gas Temp.,97.1032881
+Ionized Calcium,96.76996194
+IT,93.01950496
+Lactic Acid,96.25169351
+LDH,99.27098342
+LDL calculated,99.92903378
+LDL measured,99.99569902
+Lipase,99.68387777
+Magnesium,93.08832068
+Manual BPd L,99.97634459
+Manual BPd R,99.9505387
+Manual BPs L,99.96989312
+Manual BPs R,99.94193673
+MAP - Assisted,99.56560074
+MDI #1 Puff,99.59785811
+MDI #2 Puff,99.84516462
+MDI #3 Puff,99.99569902
+Mean Airway Pressure,88.49487108
+Medication Infusion Rate,99.97849509
+Minute Volume,88.39164749
+Mixed Venous O2% Sat,99.76129546
+NBPd,43.24423131
+NBPm,42.68080256
+NBPs,43.21842541
+Negative Insp. Force,99.99139803
+O2 Flow,90.82170276
+O2 Flow (additional cannula),99.43011978
+P High (APRV),99.96559214
+P Low (APRV),99.96774263
+PA Line cm Mark,99.59355713
+PAPd,98.06025677
+PAPm,98.08821316
+PAPs,98.05810628
+Paw High,88.94862476
+PBP (Prefilter) Replacement Rate,99.76774693
+PbtO2,99.78925184
+PCA 1 hour limit,99.15485688
+PCA attempt,99.20431819
+PCA basal rate (mL/hour),99.49463452
+PCA bolus,99.79570332
+PCA dose,99.13120148
+PCA inject,99.19786671
+PCA lockout (min),99.13765295
+PCA total dose,99.38710995
+PCO2 (Arterial),94.65172792
+PCO2 (Venous),99.56129976
+PCV Level,99.96129116
+PCWP,99.9741941
+Peak Insp. Pressure,88.87335756
+PeCO2,99.99354853
+PEEP set,87.90133546
+Permanent Pacemaker Rate,99.92688329
+PH (Arterial),94.52699942
+PH (dipstick),99.13765295
+PH (Venous),99.45377519
+Phenobarbital,99.98709705
+Phenytoin (Dilantin),99.17851229
+Phenytoin (Free),99.99139803
+Phosphorous,93.32702523
+Pinsp (Draeger only),99.97204361
+Pinsp (Hamilton),99.86021806
+Plateau Pressure,95.07537472
+Plateau Pressure (IABP),99.85376659
+Platelet Count,93.1829423
+Pminimum,99.85161609
+PO2 (Arterial),94.65172792
+PO2 (Mixed Venous),99.94408722
+PO2 (Venous),99.56129976
+Post Filter Replacement Rate,99.79140234
+Potassium (serum),92.2603815
+Potassium (whole blood),98.51616094
+Pressure Ulcer #1-  Width,99.55269779
+Pressure Ulcer #1- Depth,99.86021806
+Pressure ulcer #1- Length,99.55269779
+Pressure Ulcer #2-  Width,99.88817445
+Pressure Ulcer #2- Depth,99.9505387
+Pressure ulcer #2- Length,99.88817445
+Pressure Ulcer #3-  Width,99.95699017
+Pressure ulcer #3- Length,99.95699017
+Pressure Ulcer #4-  Width,99.98924754
+Pressure ulcer #4- Length,99.98924754
+PSV Level,94.71839315
+PT,95.22160814
+PTT,95.24526354
+QTc,99.94838821
+RCexp (Measured Time Constant),99.86236855
+Recovery HR - Aerobic Activity Response,99.99784951
+Recovery HR - Aerobic Capacity,99.99569902
+Recovery O2 sat - Aerobic Activity Response,99.99784951
+Recovery O2 Sat - Aerobic Capacity,99.99569902
+Recovery RR - Aerobic Activity Response,99.99569902
+Recovery RR - Aerobic Capacity,99.99784951
+Recruitment Duration,99.97634459
+Recruitment Press,99.98064558
+Replacement Rate,99.73333907
+Resistance Exp,99.86666953
+Resistance Insp,99.86666953
+Respiratory Rate (Set),92.65607191
+Respiratory Rate (spontaneous),89.19808176
+Respiratory Rate (Total),90.04322488
+Rest HR -  Aerobic Activity Response,99.99569902
+Rest HR - Aerobic Capacity,99.99569902
+Rest O2 Sat - Aerobic Activity Response,99.99569902
+Rest O2 Sat - Aerobic Capacity,99.99569902
+Rest RR - Aerobic Activity Response,99.99569902
+Rest RR - Aerobic Capacity,99.99784951
+Return Pressure,99.74839251
+RR,9.249263457
+SaO2,99.11184706
+Sed Rate,99.99354853
+Serum Osmolality,99.19786671
+Site Depth #1,99.34194964
+Site Depth #2,99.67097482
+Site Depth #3,99.7763489
+Site Depth #4,99.89032494
+Site Depth #5,99.95483968
+Site Depth #6,99.98064558
+Site Depth #7,99.99784951
+Site Depth #8,99.99569902
+Site Length #1,97.70757618
+Site Length #2,98.84303563
+Site Length #3,99.26883293
+Site Length #4,99.64516892
+Site Length #5,99.79140234
+Site Length #6,99.92258231
+Site Length #7,99.98494656
+Site Length #8,99.99569902
+Site Length #9,99.99354853
+Site Width #1,97.93122729
+Site Width #2,99.03012838
+Site Width #3,99.37420701
+Site Width #4,99.66452334
+Site Width #5,99.81935872
+Site Width #6,99.92258231
+Site Width #7,99.98494656
+Site Width #8,99.99569902
+Site Width #9,99.99354853
+Skeletal Traction #1 - Pounds,99.80215479
+Sodium (serum),92.12920152
+Sodium (whole blood),99.07098772
+Specific Gravity (urine),99.17206082
+SpO2,10.52665534
+Spont RR,99.08174018
+Spont Vt,99.08174018
+Stroke Volume (SV NICOM),99.85591708
+Stroke Volume Index (SVI NICOM),99.83441216
+Stroke Volume Variation (SVI NICOM),99.87742199
+SV (Arterial),99.76559644
+SV Neb Dose #2,99.98924754
+SVI (PiCCO),99.89462592
+SVI Change,99.98064558
+SvO2,98.73121008
+SVRI (PiCCO),99.93763575
+SVV (Arterial),99.72043612
+SVV (PiCCO),99.96129116
+SYS - Assisted,99.56560074
+SYS - Unassisted,99.57850369
+T High (APRV),99.96559214
+T Low (APRV),99.96774263
+TCO2 (calc) Arterial,94.64957743
+TCO2 (calc) Venous,99.56345025
+Temp Atrial Sens Setting mV,99.82796069
+Temp Atrial Sens Threshold mV,99.86236855
+Temp Atrial Stim Setting mA,99.8258102
+Temp Atrial Stim Threshold mA,99.85591708
+Temp AV interval,99.98709705
+Temp Pacemaker Rate,99.37420701
+Temp Pacemaker Wires Atrial,99.52904239
+Temp Pacemaker Wires Ground,99.95699017
+Temp Pacemaker Wires Venticular,99.47743059
+Temp Venticular Sens Threshold mV,99.78280037
+Temp Venticular Stim Threshold mA,99.77204791
+Temp Ventricular Sens Setting mV,99.78710135
+Temp Ventricular Stim Setting mA,99.74409152
+Temperature C,97.99789252
+Temperature F,73.66723296
+TFC (NICOM),99.99784951
+Thrombin,99.99784951
+Tidal Volume (observed),88.86690609
+Tidal Volume (set),92.95068923
+Tidal Volume (spontaneous),94.8302187
+Time spent,99.99354853
+Timespent,99.99784951
+Tobramycin (Random),99.98924754
+Total Bilirubin,98.61938453
+Total Granulocyte Count (TGC),99.99569902
+Total PEEP Level,96.27319843
+Total Protein,99.96989312
+TPR (NICOM),99.97204361
+TPRI (NICOM),99.96989312
+Transpulmonary Press (Exp. Hold),99.98494656
+Transpulmonary Press (Insp. Hold),99.98494656
+Triglyceride,99.88387347
+Troponin-T,98.47315112
+Ultrafiltrate Output,99.69893121
+Uric Acid,99.97634459
+Vancomycin (Random),99.8494656
+Vancomycin (Trough),99.89462592
+VEN  Lumen Volume,99.93978624
+Ventilator Tank #1,95.35278811
+Ventilator Tank #2,95.37644352
+Volume In (PD),99.94193673
+Volume Out (PD),99.93978624
+Vti High,89.3894755
+WBC,93.36788456
