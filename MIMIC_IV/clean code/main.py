@@ -3,19 +3,18 @@ import pandas as pd
 import matplotlib.pyplot as plt 
 from matplotlib.pyplot import cm
 import seaborn as sns
-import preprocessing as pr
+
 import torch 
-import sklearn as sk
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegressionCV
 from sklearn.preprocessing import normalize
 from xgboost import XGBClassifier
 from sklearn.model_selection import cross_val_score
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import cross_val_score, KFold
 from sklearn.metrics import f1_score
-from sklearn.metrics import roc_auc_score
-from sklearn.metrics import roc_curve, auc
+
+import plots 
+import preprocessing as pr
 
 ##Variables 
 nb_hours = 48
@@ -103,12 +102,13 @@ for i in range(len(batch_hourly)):
    batch_demographic[i].gcs = batch_demographic[i].gcs.fillna(df_demographic.gcs.mean())
 
 #feature concatenation 
+stratify_param = df_demographic.gcs
 final_data = np.array([[np.concatenate([np.concatenate(batch_demographic[i].values), np.concatenate(batch_hourly[i].values), np.concatenate(batch_24h[i].values), np.concatenate(batch_48h[i].values), np.concatenate(batch_med[i].values)])] for i in range(len(batch_hourly))])
 final_data = np.squeeze(final_data).astype('float64')
 final_data = normalize(final_data)
 
 #dataset split 
-X_train, X_test, y_train, y_test = train_test_split(final_data, labels, test_size=0.2, random_state=1)
+X_train, X_test, y_train, y_test = train_test_split(final_data, labels, test_size=0.2, random_state=1, stratify=stratify_param)
 X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.25, random_state=1) # 0.25 x 0.8 = 0.2
 xgbc = XGBClassifier()
 xgbc.fit(X_train, y_train)
@@ -123,31 +123,9 @@ print("K-fold CV average score: %.2f" % kf_cv_scores.mean())
 
 y_pred = xgbc.predict(X_val)
 y_pred_proba = xgbc.predict_proba(X_val)
+y_pred_proba = y_pred_proba[:,1]
 cm = confusion_matrix(y_val,y_pred)
 f1 = f1_score(y_val, y_pred)
-print(cm, f1)
 
 #AUROC 
-# Compute ROC curve and ROC area for each class
-# generate a no skill prediction (majority class)
-ns_probs = [0 for _ in range(len(y_val))]
-lr_probs = y_pred_proba
-# calculate scores
-ns_auc = roc_auc_score(y_pred_proba, ns_probs)
-lr_auc = roc_auc_score(y_pred_proba, lr_probs)
-# summarize scores
-print('No Skill: ROC AUC=%.3f' % (ns_auc))
-print('Logistic: ROC AUC=%.3f' % (lr_auc))
-# calculate roc curves
-ns_fpr, ns_tpr, _ = roc_curve(y_pred_proba, ns_probs)
-lr_fpr, lr_tpr, _ = roc_curve(y_pred_proba, lr_probs)
-# plot the roc curve for the model
-plt.plot(ns_fpr, ns_tpr, linestyle='--', label='No Skill')
-plt.plot(lr_fpr, lr_tpr, marker='.', label='Logistic')
-# axis labels
-plt.xlabel('False Positive Rate')
-plt.ylabel('True Positive Rate')
-# show the legend
-plt.legend()
-# show the plot
-plt.show()
+plots.ROC_plot(y_pred_proba, y_val, model_name = 'XGBoost')
