@@ -38,7 +38,7 @@ df_demographic, df_med, df_hourly, df_24h, df_48h = pr.arrange_ids(df_demographi
 
 ##label extraction 
 labels = df_demographic.pop('los')
-labels[labels < 4] = 0
+labels[labels <= 4] = 0
 labels[labels > 4] = 1
 labels = labels.values
 
