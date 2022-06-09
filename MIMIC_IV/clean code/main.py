@@ -1,23 +1,18 @@
-import numpy as np 
+import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt 
-from matplotlib.pyplot import cm
-import seaborn as sns
+from hyperopt import fmin, tpe, hp, anneal, Trials
 
-import torch 
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import (KFold, StratifiedKFold, cross_val_predict,
+                                     cross_validate, train_test_split)
 from sklearn.preprocessing import normalize
 from xgboost import XGBClassifier
-from sklearn.model_selection import cross_val_score
-from sklearn.metrics import confusion_matrix
-from sklearn.model_selection import cross_val_score, KFold
-from sklearn.metrics import f1_score
 
-import plots 
+import plots
 import preprocessing as pr
 
 ##Variables 
 nb_hours = 48
+random_state = 1
 
 ##data loading 
 df_hourly = pd.read_csv(r'C:\Users\USER\Documents\Imperial\Summer_project\Azure\data\preprocessed_mimic4_hour.csv', delimiter=',')
@@ -107,25 +102,24 @@ final_data = np.array([[np.concatenate([np.concatenate(batch_demographic[i].valu
 final_data = np.squeeze(final_data).astype('float64')
 final_data = normalize(final_data)
 
-#dataset split 
-X_train, X_test, y_train, y_test = train_test_split(final_data, labels, test_size=0.2, random_state=1, stratify=stratify_param)
-X_train, X_val, y_train, y_val = train_test_split(X_train, y_train, test_size=0.25, random_state=1) # 0.25 x 0.8 = 0.2
-xgbc = XGBClassifier()
-xgbc.fit(X_train, y_train)
+#XGBOOST MODEL 
+X_train, X_test, y_train, y_test = train_test_split(final_data, labels, test_size=0.2, shuffle = True, random_state=random_state, stratify=stratify_param)
+xgbc = XGBClassifier(random_state = random_state)
 
-# - cross validataion
-scores = cross_val_score(xgbc, X_train, y_train, cv=5)
-print("Mean cross-validation score: %.2f" % scores.mean())
+#final model training and test 
+kfold = KFold(n_splits=2, shuffle=True, random_state=random_state)
+# kfold = KFold(n_splits=10, shuffle=True, random_state=1)
 
-kfold = KFold(n_splits=10, shuffle=True)
-kf_cv_scores = cross_val_score(xgbc, X_train, y_train, cv=kfold )
-print("K-fold CV average score: %.2f" % kf_cv_scores.mean())
+kf_cv_scores = cross_validate(xgbc, X_train, y_train, cv=kfold, scoring =	['accuracy', 'roc_auc'] )
+y_pred = cross_val_predict(xgbc, X_train, y_train, cv=kfold, method = 'predict_proba')[:,1]
 
-y_pred = xgbc.predict(X_val)
-y_pred_proba = xgbc.predict_proba(X_val)
-y_pred_proba = y_pred_proba[:,1]
-cm = confusion_matrix(y_val,y_pred)
-f1 = f1_score(y_val, y_pred)
+
+print("K-fold CV average accuracy:", round(kf_cv_scores['test_accuracy'].mean(), 2))
+print("K-fold CV average roc:", round(kf_cv_scores['test_roc_auc'].mean(), 2))
+
+
+# cm = confusion_matrix(y_train,y_pred)
+# f1 = f1_score(y_train, y_pred)
 
 #AUROC 
-plots.ROC_plot(y_pred_proba, y_val, model_name = 'XGBoost')
+plots.ROC_plot(y_pred, y_train, model_name = 'XGBoost')
