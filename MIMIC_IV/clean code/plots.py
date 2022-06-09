@@ -10,9 +10,11 @@ def ROC_plot(y_pred_proba, y, model_name):
     # calculate scores
     ns_auc = roc_auc_score(y, ns_probs)
     lr_auc = roc_auc_score(y, lr_probs)
-    # summarize scores
-    print('No Skill: ROC AUC=%.3f' % (ns_auc))
-    print('Logistic: ROC AUC=%.3f' % (lr_auc))
+
+    # # summarize scores
+    # print('No Skill: ROC AUC=%.3f' % (ns_auc))
+    # print('Logistic: ROC AUC=%.3f' % (lr_auc))
+    
     # calculate roc curves
     ns_fpr, ns_tpr, _ = roc_curve(y, ns_probs)
     lr_fpr, lr_tpr, _ = roc_curve(y, lr_probs)
