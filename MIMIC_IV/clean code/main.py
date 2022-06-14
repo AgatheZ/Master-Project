@@ -15,6 +15,7 @@ from evaluation import Evaluation
 import preprocessing as pr
 from hyp_tuning import HypTuning
 
+
 warnings.filterwarnings("ignore")
 
 ##Variables 
@@ -87,6 +88,8 @@ df_24h = pd.concat(batch_24h)
 ##the stay ids column are dropped since we alreasy took care of them being in the same order for all datasets
 df_48h = df_48h.drop(columns = 'stay_id')
 df_med = df_med.drop(columns = 'stay_id')
+df_demographic = df_demographic.drop(columns = 'stay_id')
+
 
 ##first linear inputation and then replaced by mean when it's not possible 
 ##pas incroyable de recalculer le mean à chaque itération... é changer 
@@ -104,23 +107,20 @@ for i in range(len(batch_hourly)):
    batch_demographic[i].bmi = batch_demographic[i].bmi.fillna(0)
    batch_demographic[i].gcs = batch_demographic[i].gcs.fillna(df_demographic.gcs.mean())
 
-# #save the preprocessed arrays
-# np.save('batch_demographic', batch_demographic, allow_pickle=True)
-
-
 #feature concatenation 
 stratify_param = df_demographic.gcs
-final_data = np.array([[np.concatenate([np.concatenate(batch_demographic[i].values), np.concatenate(batch_hourly[i].values), np.concatenate(batch_24h[i].values), np.concatenate(batch_48h[i].values), np.concatenate(batch_med[i].values)])] for i in range(len(batch_hourly))])
+final_data = np.array([[np.concatenate([np.concatenate(batch_demographic[i].values), np.concatenate(batch_hourly[i].values), np.concatenate(batch_24h[i].values),np.concatenate(batch_48h[i].values), np.concatenate(batch_med[i].values)])] for i in range(len(batch_hourly))])
 final_data = np.squeeze(final_data).astype('float64')
 final_data = normalize(final_data)
+feature_names = np.concatenate((pr.get_column_name(df_demographic), pr.get_column_name(df_hourly), pr.get_column_name(df_24h), pr.get_column_name(df_48h), pr.get_column_name(df_med)))
+
 
 #XGBOOST MODEL 
 X_train, X_test, y_train, y_test = train_test_split(final_data, labels, test_size=0.2, shuffle = True, random_state=random_state)
 X_train, X_val, y_train, y_val  = train_test_split(X_train, y_train, test_size=0.25, random_state=random_state)
 
-
 # # #hyperparameter tuning 
-# kfold = KFold(n_splits=4, shuffle=True, random_state=random_state)
+# 
 # space_hp ={'max_depth': (hp.quniform("max_depth", 3, 18, 1)),
 #         'gamma': hp.uniform ('gamma', 0,9),
 #         'alpha' : hp.quniform('alpha', 0,180,1),
@@ -132,47 +132,33 @@ X_train, X_val, y_train, y_val  = train_test_split(X_train, y_train, test_size=0
 #         'seed': 0
 #     }
 
-# space_rd = {'max_depth': random.sample(range(3, 18), 2),
-#         'gamma': np.random.uniform (1,9,10),
-#         'alpha' : random.sample(range(0,180),10),
-#         'eta' : np.random.uniform( 0,0.1,10),
+# xgboost_hyp_tuning = HypTuning(5, space_hp, X_train, y_train, X_val, y_val, n_iter = 1000, random_state =random_state)
+# best_param = xgboost_hyp_tuning.hyperopt()
 
-#         'colsample_bytree' : np.random.uniform(0.5,1,10),
-#         'min_child_weight' : random.sample(range(0, 10),10),
-#         'n_estimators': [180],
-#         'seed': [0]
-#     }
+# final models evaluation using 5-fold cross validation  
+best_param = {'alpha': 0, 'colsample_bytree': 0.55, 'eta': 0.04, 'gamma': 3.91, 'max_depth': 6, 'min_child_weight': 2}
+depth = best_param['max_depth']
 
-# # xgboost_hyp_tuning = HypTuning(kfold, space_hp, X_train, y_train, X_val, y_val, n_iter = 1000, random_state =random_state)
-# # best_param = xgboost_hyp_tuning.hyperopt()
 
-# #final model training and test 
-# # best_param = {'alpha': 6.0, 'colsample_bytree': 0.5352461591753516, 'eta': 0.2198100520631916, 'gamma': 0.8693907096181676, 'max_depth': 8.0, 'min_child_weight': 1.0}
-# # depth = best_param['max_depth']
-# # xgbc = XGBClassifier(random_state = random_state, 
-# #                         max_depth = int(depth), 
-# #                         gamma = best_param['gamma'],
-# #                         eta = best_param['eta'],
-# #                         alpha = (best_param['alpha']),
 
-# #                         min_child_weight=(best_param['min_child_weight']),
-# #                         colsample_bytree=best_param['colsample_bytree'])
+model =  XGBClassifier(random_state = random_state, 
+                        max_depth = int(depth), 
+                        gamma = best_param['gamma'],
+                        eta = best_param['eta'],
+                        alpha = (best_param['alpha']),
 
-# xgbc = XGBClassifier(random_state = random_state)
-# xgbc.fit(np.concatenate((X_train, X_val)), np.concatenate((y_train, y_val)))
+                        min_child_weight=(best_param['min_child_weight']),
+                        colsample_bytree=best_param['colsample_bytree'])
+
+eval = Evaluation(model, 'Tuned XGBoost', final_data, labels, random_state, True, feature_names)
+eval.evaluate()
+
 
 # #save the model 
 # filename = 'LOS_XGBoost_random_sampling.sav'
 # pickle.dump(xgbc, open(filename, 'wb'))
 
-# #make the predictions
-# y_pred = xgbc.predict(X_test)
-# y_pred_proba = xgbc.predict_proba(X_test)
-# y_pred_proba = y_pred_proba[:,1]
 
-#model evaluation
-model =  pickle.load(open('Master-Project\MIMIC_IV\models\LOS_XGBoost_24_tuned.sav', 'rb'))
-eval = Evaluation(model, 'Tuned XGBoost', X_test, y_test)
-eval.evaluate()
+
 
 
