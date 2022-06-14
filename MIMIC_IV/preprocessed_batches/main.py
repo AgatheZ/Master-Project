@@ -18,7 +18,7 @@ from hyp_tuning import HypTuning
 warnings.filterwarnings("ignore")
 
 ##Variables 
-nb_hours = 24
+nb_hours = 48
 random_state = 1
 
 ##data loading 
@@ -37,7 +37,7 @@ df_48h = df_48h.drop(columns = ['icu_intime'])
 df_hourly = pr.trunc_length(df_hourly, nb_hours)
 df_24h = pr.trunc_length(df_24h, nb_hours//24)
 df_demographic, df_med, df_hourly, df_24h, df_48h = pr.arrange_ids(df_demographic, df_med, df_hourly, df_24h, df_48h)
-np.save('df_demographic', df_demographic, allow_pickle=True)
+
 
 ##label extraction 
 labels = df_demographic.pop('los')
@@ -72,8 +72,8 @@ batch_demographic = pr.create_batchs(df_demographic)
 
 ##reindex for patients that don't have entries at the begginning of their stays 
 for i in range(len(batch_24h)):
-    batch_hourly[i] = batch_hourly[i].reindex(range(1, 49), fill_value = None) 
-    batch_24h[i] = batch_24h[i].reindex(range(1, 3), fill_value = None) 
+    batch_hourly[i] = batch_hourly[i].reindex(range(1, nb_hours + 1), fill_value = None) 
+    batch_24h[i] = batch_24h[i].reindex(range(1, nb_hours//24 + 1), fill_value = None) 
     batch_hourly[i] = batch_hourly[i].drop(columns = 'stay_id')
     batch_24h[i] = batch_24h[i].drop(columns = 'stay_id')
     batch_48h[i] = batch_48h[i].drop(columns = 'stay_id')
@@ -106,13 +106,7 @@ for i in range(len(batch_hourly)):
 
 # #save the preprocessed arrays
 # np.save('batch_demographic', batch_demographic, allow_pickle=True)
-# np.save('batch_hourly', batch_hourly, allow_pickle=True)
-# np.save('batch_24h', batch_24h, allow_pickle=True)
-# np.save('batch_48h', batch_48h, allow_pickle=True)
 
-# np.save('df_hourly', df_hourly, allow_pickle=True)
-# np.save('df_24h', df_24h, allow_pickle=True)
-# np.save('df_48h', df_48h, allow_pickle=True)
 
 #feature concatenation 
 stratify_param = df_demographic.gcs
