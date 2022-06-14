@@ -42,10 +42,10 @@ ce.stay_id = tbi.stay_id
 WHERE ((fl.param_type like '%Numeric%')) AND (((fl.category != 'Alarms') AND (fl.category != 'General')));
 
 --- Get table of future One-hot (medicine)
-DROP TABLE IF EXISTS mimiciv.cohort_med CASCADE;
+DROP TABLE IF EXISTS mimiciv.cohort_med;
 CREATE TABLE mimiciv.cohort_med
 AS
-(
+
 SELECT inpt.stay_id, fl.abbreviation as med_name, inpt.amount
 FROM mimic_icu.inputevents inpt
 JOIN mimic_icu.d_items fl 
@@ -53,8 +53,8 @@ ON fl.itemid = inpt.itemid
 JOIN mimiciv.lookup lk 
 ON lk.vital_name = fl.abbreviation
 JOIN mimiciv.TBI tbi ON
-inpt.stay_id = tbi.stay_id
-)
+inpt.stay_id = tbi.stay_id;
+
 
 --- Data aggregation - HOURLY
 DROP TABLE IF EXISTS  mimiciv.aggregated_vitals_hourly CASCADE;

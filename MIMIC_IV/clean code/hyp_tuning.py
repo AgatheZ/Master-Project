@@ -1,39 +1,67 @@
-from hyperopt import fmin, tpe, hp, anneal, Trials
+from hyperopt import fmin, tpe, hp, anneal, Trials, STATUS_OK
 from xgboost import XGBClassifier
+from sklearn.metrics import accuracy_score, roc_auc_score
+from sklearn.model_selection import RandomizedSearchCV
+from scipy.stats import randint
+import warnings
 
 class HypTuning:
-    def __init__(self, cv, space, X_train, y_train, X_test, y_test):
+    def __init__(self, cv, space, X_train, y_train, X_val, y_val, n_iter, random_state):
         self.cv = cv
         self.space = space
         self.X_train = X_train
         self.y_train = y_train
-        self.X_test = X_test
-        self.y_test = y_test
+        self.X_val = X_val
+        self.y_val = y_val
+        self.n_iter = n_iter
+        self.random_state = random_state
 
-# space={'max_depth': hp.quniform("max_depth", 3, 18, 1),
-#         'gamma': hp.uniform ('gamma', 1,9),
-#         'reg_alpha' : hp.quniform('reg_alpha', 40,180,1),
-#         'reg_lambda' : hp.uniform('reg_lambda', 0,1),
-#         'colsample_bytree' : hp.uniform('colsample_bytree', 0.5,1),
-#         'min_child_weight' : hp.quniform('min_child_weight', 0, 10, 1),
-#         'n_estimators': 180,
-#         'seed': 0
-#     }
 
-def objective(self):
-    clf=XGBClassifier(
-                    n_estimators = self.space['n_estimators'], max_depth = int(self.space['max_depth']), gamma = self.space['gamma'],
-                    reg_alpha = int(self.space['reg_alpha']),min_child_weight=int(self.space['min_child_weight']),
-                    colsample_bytree=int(self.space['colsample_bytree']))
-    
-    evaluation = [( X_train, y_train), ( X_test, y_test)]
-    
-    clf.fit(X_train, y_train,
-            eval_set=evaluation, eval_metric="auc",
-            early_stopping_rounds=10,verbose=False)
-    
 
-    pred = clf.predict(X_test)
-    accuracy = accuracy_score(y_test, pred>0.5)
-    print ("SCORE:", accuracy)
-    return {'loss': -accuracy, 'status': STATUS_OK }   
+    def objective(self, space):
+        clf=XGBClassifier(random_state = self.random_state,
+                        n_estimators = space['n_estimators'], max_depth = int(space['max_depth']), gamma = space['gamma'],
+                        alpha = int(space['alpha']), min_child_weight=int(space['min_child_weight']),
+                        colsample_bytree=(space['colsample_bytree']), eta = (space['eta']))
+        
+        evaluation = [(self.X_train, self.y_train), (self.X_val, self.y_val)]
+        
+        clf.fit(self.X_train, self.y_train,
+                eval_set=evaluation, eval_metric="auc", verbose=False)
+        
+
+        pred = clf.predict(self.X_val)
+        pred_proba = clf.predict_proba(self.X_val)[:,1]
+        accuracy = accuracy_score(self.y_val, pred>0.5)
+        auroc = roc_auc_score(self.y_val, pred_proba )
+        print ("accuracy:", accuracy)
+        return {'loss': -auroc, 'status': STATUS_OK}
+
+    def optimisation(self):
+        
+        trials = Trials()
+        objective = self.objective
+        best_hyperparams = fmin(fn = objective,
+                                space = self.space,
+                                algo = tpe.suggest,
+                                max_evals = self.n_iter,
+                                trials = trials)   
+        print("The best hyperparameters are : ","\n")
+        print(best_hyperparams)
+
+    def hyperopt(self):
+        return self.optimisation()
+    
+    def random_search(self):
+        param_grid_rand = self.space
+        model = XGBClassifier()
+        rs=RandomizedSearchCV(model, param_grid_rand, n_iter = self.n_iter, scoring='roc_auc', 
+                n_jobs=-1, cv=self.cv, verbose=True, random_state=self.random_state)
+
+        rs.fit(self.X_train, self.y_train)
+
+        # rs_test_score = roc_auc_score(self.y_val, rs.predict(self.X_val))
+
+        print("Best AUROC {:.3f} params {}".format(-rs.best_score_, rs.best_params_))
+
+        return rs.best_params_
