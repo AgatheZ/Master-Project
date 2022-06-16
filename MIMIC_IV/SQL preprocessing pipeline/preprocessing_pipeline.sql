@@ -15,7 +15,7 @@ WHERE (icu.los >= 2) AND ((d.icd_code LIKE '850%') OR (d.icd_code LIKE '851%') O
 
 ---Creation of the vitals lookup table 
 DROP TABLE IF EXISTS mimiciv.lookup CASCADE;
-CREATE TABLE mimiciv.lookup (vital_name varchar(50), aggregation varchar(10));
+CREATE TABLE mimiciv.lookup (vital_name varchar(50), aggregation int);
 COPY mimiciv.lookup(vital_name, aggregation) FROM 'lookup_vitals_aggregation.csv' delimiter ',' CSV HEADER;
 
 
@@ -41,22 +41,98 @@ ce.stay_id = tbi.stay_id
 
 WHERE ((fl.param_type like '%Numeric%')) AND (((fl.category != 'Alarms') AND (fl.category != 'General')));
 
---- Get table of future One-hot (medicine)
-DROP TABLE IF EXISTS mimiciv.cohort_med;
-CREATE TABLE mimiciv.cohort_med
+
+
+--- Data aggregation - 48 HOURS 
+DROP TABLE IF EXISTS  mimiciv.aggregated_vitals_48h CASCADE;
+CREATE TABLE  mimiciv.aggregated_vitals_48h
 AS
 
-SELECT inpt.stay_id, fl.abbreviation as med_name, inpt.amount
-FROM mimic_icu.inputevents inpt
-JOIN mimic_icu.d_items fl 
-ON fl.itemid = inpt.itemid
-JOIN mimiciv.lookup lk 
-ON lk.vital_name = fl.abbreviation
-JOIN mimiciv.TBI tbi ON
-inpt.stay_id = tbi.stay_id;
+WITH icu_vital_data
+AS
+
+(
+SELECT
+vit.stay_id, DATE_TRUNC('hour', icu.intime) as icu_intime 
+,vit.charttime - DATE_TRUNC('hour', icu.intime) as diff_chart_intime -- difference between charttime and icu admitted time
+,vit.vital_name
+, CAST(vit.vital_reading AS NUMERIC)
+, vit.charttime AS charttime
+FROM
+mimiciv.cohort_vitals vit
+LEFT JOIN  mimic_icu.icustays icu
+ON vit.stay_id = icu.stay_id
+JOIN mimiciv.lookup lk
+ON vit.vital_name = lk.vital_name
+WHERE lk.aggregation = '48' AND icu.los >= 2
 
 
---- Data aggregation - HOURLY
+) , 
+
+aggregated 
+AS
+
+(
+SELECT
+stay_id
+,icu_intime
+,EXTRACT(DAY FROM diff_chart_intime)    + case when  EXTRACT(HOUR FROM diff_chart_intime) >=1 then 1 else 0 end as hour_from_intime -- number of hours from icu admitted time
+,vital_name AS feature_name
+, avg(vital_reading) AS feature_mean_value
+FROM icu_vital_data
+GROUP BY stay_id, icu_intime, hour_from_intime, feature_name
+)
+
+SELECT stay_id, icu_intime,  feature_name, feature_mean_value, hour_from_intime
+FROM aggregated
+GROUP BY stay_id, icu_intime, hour_from_intime, feature_name, feature_mean_value
+ORDER BY stay_id, hour_from_intime;
+
+
+--- Data aggregation - MINUTE  ---------------------------------------------------------------------------------------
+DROP TABLE IF EXISTS  mimiciv.aggregated_vitals_minute CASCADE;
+CREATE TABLE  mimiciv.aggregated_vitals_minute
+AS
+
+WITH icu_vital_data
+AS
+
+(
+SELECT
+vit.stay_id, DATE_TRUNC('minute', icu.intime) as icu_intime 
+,vit.charttime - DATE_TRUNC('minute', icu.intime) as diff_chart_intime -- difference between charttime and icu admitted time
+,vit.vital_name
+, CAST(vit.vital_reading AS NUMERIC)
+, vit.charttime AS charttime
+FROM
+mimiciv.cohort_vitals vit
+LEFT JOIN  mimic_icu.icustays icu
+ON vit.stay_id = icu.stay_id
+JOIN mimiciv.lookup lk
+ON vit.vital_name = lk.vital_name
+WHERE lk.aggregation = 0 AND icu.los >= 2
+) , 
+
+aggregated 
+AS
+
+(
+SELECT
+stay_id
+,icu_intime
+,EXTRACT(DAY FROM diff_chart_intime)*24*60    + EXTRACT(HOUR FROM diff_chart_intime)*60 + EXTRACT(MINUTE FROM diff_chart_intime) + case when  EXTRACT(SECOND FROM diff_chart_intime) >=1 then 1 else 0 end as min_from_intime -- number of hours from icu admitted time
+,vital_name AS feature_name
+, avg(vital_reading) AS feature_mean_value
+FROM icu_vital_data
+GROUP BY stay_id, icu_intime, min_from_intime, feature_name
+)
+
+SELECT stay_id, icu_intime,  feature_name, feature_mean_value, min_from_intime
+FROM aggregated
+GROUP BY stay_id, icu_intime, min_from_intime, feature_name, feature_mean_value
+ORDER BY stay_id, min_from_intime;
+
+--- Data aggregation - HOURLY ---------------------------------------------------------------------------------------
 DROP TABLE IF EXISTS  mimiciv.aggregated_vitals_hourly CASCADE;
 CREATE TABLE  mimiciv.aggregated_vitals_hourly
 AS
@@ -77,6 +153,8 @@ LEFT JOIN  mimic_icu.icustays icu
 ON vit.stay_id = icu.stay_id
 JOIN mimiciv.lookup lk
 ON vit.vital_name = lk.vital_name
+JOIN mimiciv.final_ids q ON
+q.stay_id = vit.stay_id
 WHERE lk.aggregation = '1' AND icu.los >= 2
 
 
@@ -122,6 +200,8 @@ LEFT JOIN  mimic_icu.icustays icu
 ON vit.stay_id = icu.stay_id
 JOIN mimiciv.lookup lk
 ON vit.vital_name = lk.vital_name
+JOIN mimiciv.final_ids q ON
+q.stay_id = vit.stay_id
 WHERE lk.aggregation = '24' AND icu.los >= 2
 
 
@@ -146,55 +226,26 @@ FROM aggregated
 GROUP BY stay_id, icu_intime, hour_from_intime, feature_name, feature_mean_value
 ORDER BY stay_id, hour_from_intime;
 
---- Data aggregation - 48 HOURS 
-DROP TABLE IF EXISTS  mimiciv.aggregated_vitals_48h CASCADE;
-CREATE TABLE  mimiciv.aggregated_vitals_48h
+--- Get table of future One-hot (medicine)
+DROP TABLE IF EXISTS mimiciv.cohort_med;
+CREATE TABLE mimiciv.cohort_med
 AS
 
-WITH icu_vital_data
-AS
-
-(
-SELECT
-vit.stay_id, DATE_TRUNC('day', icu.intime) as icu_intime 
-,vit.charttime - DATE_TRUNC('day', icu.intime) as diff_chart_intime -- difference between charttime and icu admitted time
-,vit.vital_name
-, CAST(vit.vital_reading AS NUMERIC)
-, vit.charttime AS charttime
-FROM
-mimiciv.cohort_vitals vit
-LEFT JOIN  mimic_icu.icustays icu
-ON vit.stay_id = icu.stay_id
-JOIN mimiciv.lookup lk
-ON vit.vital_name = lk.vital_name
-WHERE lk.aggregation = '48' AND icu.los >= 2
-
-
-) , 
-
-aggregated 
-AS
-
-(
-SELECT
-stay_id
-,icu_intime
-,vital_name AS feature_name
-, avg(vital_reading) AS feature_mean_value
-FROM icu_vital_data
-GROUP BY stay_id, icu_intime, feature_name
-)
-
-SELECT stay_id, icu_intime,  feature_name, feature_mean_value
-FROM aggregated
-GROUP BY stay_id, icu_intime,  feature_name, feature_mean_value
-ORDER BY stay_id;
-
+SELECT tbi.stay_id, fl.abbreviation as med_name, inpt.amount
+FROM mimic_icu.inputevents inpt
+JOIN mimic_icu.d_items fl 
+ON fl.itemid = inpt.itemid
+JOIN mimiciv.lookup lk 
+ON lk.vital_name = fl.abbreviation
+RIGHT JOIN mimiciv.tbi tbi ON
+inpt.stay_id = tbi.stay_id
+JOIN mimiciv.final_ids q ON
+q.stay_id = tbi.stay_id;
 
 ---Get demographic table 
 DROP TABLE IF EXISTS mimiciv.demographics;
 CREATE TABLE mimiciv.demographics AS
-(
+
 
 WITH transformed 
 AS
@@ -216,6 +267,8 @@ JOIN mimic_icu.d_items fl
 ON fl.itemid = ce.itemid
 JOIN mimiciv.TBI ON
 ce.stay_id = tbi.stay_id
+JOIN mimiciv.final_ids q ON
+q.stay_id = tbi.stay_id
 WHERE fl.itemid IN (220739, 223900, 223901) 
 ),
 
@@ -242,11 +295,18 @@ SELECT rest.stay_id, rest.gender, rest.age, rest.los, rest.bmi, rest.death, ROUN
 FROM rest, averaged  
 WHERE rest.stay_id = averaged.stay_id
 GROUP BY rest.stay_id, rest.gender, rest.age, rest.los, rest.bmi, rest.death
-);
+;
 
 ---Get vitals table 
-DROP TABLE IF EXISTS mimiciv.preprocessed_vitals;
-CREATE TABLE mimiciv.preprocessed_vitals AS
-(
-SELECT stay_id, icu_intime, feature_name, round(feature_mean_value, 2), hour_from_intime FROM mimiciv.aggregated_vitals
-);
+-- DROP TABLE IF EXISTS mimiciv.final_stays;
+-- CREATE TABLE mimiciv.final_stays AS
+
+-- SELECT h.stay_id FROM mimiciv.aggregated_vitals_hourly h 
+-- JOIN mimiciv.aggregated_vitals_24h v 
+-- ON v.stay_id = h.stay_id
+-- JOIN mimiciv.aggregated_vitals_48h q 
+-- ON q.stay_id = h.stay_id
+-- JOIN mimiciv.cohort_med m
+-- ON m.stay_id = h.stay_id
+
+-- ;

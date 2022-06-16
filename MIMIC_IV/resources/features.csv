@@ -1,0 +1,651 @@
+gender,gender
+age,age
+bmi,bmi
+death,death
+gcs,gcs
+ABPd_1,ABPd_1
+ABPd_2,ABPd_2
+ABPd_3,ABPd_3
+ABPd_4,ABPd_4
+ABPd_5,ABPd_5
+ABPd_6,ABPd_6
+ABPd_7,ABPd_7
+ABPd_8,ABPd_8
+ABPd_9,ABPd_9
+ABPd_10,ABPd_10
+ABPd_11,ABPd_11
+ABPd_12,ABPd_12
+ABPd_13,ABPd_13
+ABPd_14,ABPd_14
+ABPd_15,ABPd_15
+ABPd_16,ABPd_16
+ABPd_17,ABPd_17
+ABPd_18,ABPd_18
+ABPd_19,ABPd_19
+ABPd_20,ABPd_20
+ABPd_21,ABPd_21
+ABPd_22,ABPd_22
+ABPd_23,ABPd_23
+ABPd_24,ABPd_24
+ABPd_25,ABPd_25
+ABPd_26,ABPd_26
+ABPd_27,ABPd_27
+ABPd_28,ABPd_28
+ABPd_29,ABPd_29
+ABPd_30,ABPd_30
+ABPd_31,ABPd_31
+ABPd_32,ABPd_32
+ABPd_33,ABPd_33
+ABPd_34,ABPd_34
+ABPd_35,ABPd_35
+ABPd_36,ABPd_36
+ABPd_37,ABPd_37
+ABPd_38,ABPd_38
+ABPd_39,ABPd_39
+ABPd_40,ABPd_40
+ABPd_41,ABPd_41
+ABPd_42,ABPd_42
+ABPd_43,ABPd_43
+ABPd_44,ABPd_44
+ABPd_45,ABPd_45
+ABPd_46,ABPd_46
+ABPd_47,ABPd_47
+ABPd_48,ABPd_48
+ABPm_1,ABPm_1
+ABPm_2,ABPm_2
+ABPm_3,ABPm_3
+ABPm_4,ABPm_4
+ABPm_5,ABPm_5
+ABPm_6,ABPm_6
+ABPm_7,ABPm_7
+ABPm_8,ABPm_8
+ABPm_9,ABPm_9
+ABPm_10,ABPm_10
+ABPm_11,ABPm_11
+ABPm_12,ABPm_12
+ABPm_13,ABPm_13
+ABPm_14,ABPm_14
+ABPm_15,ABPm_15
+ABPm_16,ABPm_16
+ABPm_17,ABPm_17
+ABPm_18,ABPm_18
+ABPm_19,ABPm_19
+ABPm_20,ABPm_20
+ABPm_21,ABPm_21
+ABPm_22,ABPm_22
+ABPm_23,ABPm_23
+ABPm_24,ABPm_24
+ABPm_25,ABPm_25
+ABPm_26,ABPm_26
+ABPm_27,ABPm_27
+ABPm_28,ABPm_28
+ABPm_29,ABPm_29
+ABPm_30,ABPm_30
+ABPm_31,ABPm_31
+ABPm_32,ABPm_32
+ABPm_33,ABPm_33
+ABPm_34,ABPm_34
+ABPm_35,ABPm_35
+ABPm_36,ABPm_36
+ABPm_37,ABPm_37
+ABPm_38,ABPm_38
+ABPm_39,ABPm_39
+ABPm_40,ABPm_40
+ABPm_41,ABPm_41
+ABPm_42,ABPm_42
+ABPm_43,ABPm_43
+ABPm_44,ABPm_44
+ABPm_45,ABPm_45
+ABPm_46,ABPm_46
+ABPm_47,ABPm_47
+ABPm_48,ABPm_48
+ABPs_1,ABPs_1
+ABPs_2,ABPs_2
+ABPs_3,ABPs_3
+ABPs_4,ABPs_4
+ABPs_5,ABPs_5
+ABPs_6,ABPs_6
+ABPs_7,ABPs_7
+ABPs_8,ABPs_8
+ABPs_9,ABPs_9
+ABPs_10,ABPs_10
+ABPs_11,ABPs_11
+ABPs_12,ABPs_12
+ABPs_13,ABPs_13
+ABPs_14,ABPs_14
+ABPs_15,ABPs_15
+ABPs_16,ABPs_16
+ABPs_17,ABPs_17
+ABPs_18,ABPs_18
+ABPs_19,ABPs_19
+ABPs_20,ABPs_20
+ABPs_21,ABPs_21
+ABPs_22,ABPs_22
+ABPs_23,ABPs_23
+ABPs_24,ABPs_24
+ABPs_25,ABPs_25
+ABPs_26,ABPs_26
+ABPs_27,ABPs_27
+ABPs_28,ABPs_28
+ABPs_29,ABPs_29
+ABPs_30,ABPs_30
+ABPs_31,ABPs_31
+ABPs_32,ABPs_32
+ABPs_33,ABPs_33
+ABPs_34,ABPs_34
+ABPs_35,ABPs_35
+ABPs_36,ABPs_36
+ABPs_37,ABPs_37
+ABPs_38,ABPs_38
+ABPs_39,ABPs_39
+ABPs_40,ABPs_40
+ABPs_41,ABPs_41
+ABPs_42,ABPs_42
+ABPs_43,ABPs_43
+ABPs_44,ABPs_44
+ABPs_45,ABPs_45
+ABPs_46,ABPs_46
+ABPs_47,ABPs_47
+ABPs_48,ABPs_48
+HR_1,HR_1
+HR_2,HR_2
+HR_3,HR_3
+HR_4,HR_4
+HR_5,HR_5
+HR_6,HR_6
+HR_7,HR_7
+HR_8,HR_8
+HR_9,HR_9
+HR_10,HR_10
+HR_11,HR_11
+HR_12,HR_12
+HR_13,HR_13
+HR_14,HR_14
+HR_15,HR_15
+HR_16,HR_16
+HR_17,HR_17
+HR_18,HR_18
+HR_19,HR_19
+HR_20,HR_20
+HR_21,HR_21
+HR_22,HR_22
+HR_23,HR_23
+HR_24,HR_24
+HR_25,HR_25
+HR_26,HR_26
+HR_27,HR_27
+HR_28,HR_28
+HR_29,HR_29
+HR_30,HR_30
+HR_31,HR_31
+HR_32,HR_32
+HR_33,HR_33
+HR_34,HR_34
+HR_35,HR_35
+HR_36,HR_36
+HR_37,HR_37
+HR_38,HR_38
+HR_39,HR_39
+HR_40,HR_40
+HR_41,HR_41
+HR_42,HR_42
+HR_43,HR_43
+HR_44,HR_44
+HR_45,HR_45
+HR_46,HR_46
+HR_47,HR_47
+HR_48,HR_48
+ICP_1,ICP_1
+ICP_2,ICP_2
+ICP_3,ICP_3
+ICP_4,ICP_4
+ICP_5,ICP_5
+ICP_6,ICP_6
+ICP_7,ICP_7
+ICP_8,ICP_8
+ICP_9,ICP_9
+ICP_10,ICP_10
+ICP_11,ICP_11
+ICP_12,ICP_12
+ICP_13,ICP_13
+ICP_14,ICP_14
+ICP_15,ICP_15
+ICP_16,ICP_16
+ICP_17,ICP_17
+ICP_18,ICP_18
+ICP_19,ICP_19
+ICP_20,ICP_20
+ICP_21,ICP_21
+ICP_22,ICP_22
+ICP_23,ICP_23
+ICP_24,ICP_24
+ICP_25,ICP_25
+ICP_26,ICP_26
+ICP_27,ICP_27
+ICP_28,ICP_28
+ICP_29,ICP_29
+ICP_30,ICP_30
+ICP_31,ICP_31
+ICP_32,ICP_32
+ICP_33,ICP_33
+ICP_34,ICP_34
+ICP_35,ICP_35
+ICP_36,ICP_36
+ICP_37,ICP_37
+ICP_38,ICP_38
+ICP_39,ICP_39
+ICP_40,ICP_40
+ICP_41,ICP_41
+ICP_42,ICP_42
+ICP_43,ICP_43
+ICP_44,ICP_44
+ICP_45,ICP_45
+ICP_46,ICP_46
+ICP_47,ICP_47
+ICP_48,ICP_48
+RR_1,RR_1
+RR_2,RR_2
+RR_3,RR_3
+RR_4,RR_4
+RR_5,RR_5
+RR_6,RR_6
+RR_7,RR_7
+RR_8,RR_8
+RR_9,RR_9
+RR_10,RR_10
+RR_11,RR_11
+RR_12,RR_12
+RR_13,RR_13
+RR_14,RR_14
+RR_15,RR_15
+RR_16,RR_16
+RR_17,RR_17
+RR_18,RR_18
+RR_19,RR_19
+RR_20,RR_20
+RR_21,RR_21
+RR_22,RR_22
+RR_23,RR_23
+RR_24,RR_24
+RR_25,RR_25
+RR_26,RR_26
+RR_27,RR_27
+RR_28,RR_28
+RR_29,RR_29
+RR_30,RR_30
+RR_31,RR_31
+RR_32,RR_32
+RR_33,RR_33
+RR_34,RR_34
+RR_35,RR_35
+RR_36,RR_36
+RR_37,RR_37
+RR_38,RR_38
+RR_39,RR_39
+RR_40,RR_40
+RR_41,RR_41
+RR_42,RR_42
+RR_43,RR_43
+RR_44,RR_44
+RR_45,RR_45
+RR_46,RR_46
+RR_47,RR_47
+RR_48,RR_48
+SpO2_1,SpO2_1
+SpO2_2,SpO2_2
+SpO2_3,SpO2_3
+SpO2_4,SpO2_4
+SpO2_5,SpO2_5
+SpO2_6,SpO2_6
+SpO2_7,SpO2_7
+SpO2_8,SpO2_8
+SpO2_9,SpO2_9
+SpO2_10,SpO2_10
+SpO2_11,SpO2_11
+SpO2_12,SpO2_12
+SpO2_13,SpO2_13
+SpO2_14,SpO2_14
+SpO2_15,SpO2_15
+SpO2_16,SpO2_16
+SpO2_17,SpO2_17
+SpO2_18,SpO2_18
+SpO2_19,SpO2_19
+SpO2_20,SpO2_20
+SpO2_21,SpO2_21
+SpO2_22,SpO2_22
+SpO2_23,SpO2_23
+SpO2_24,SpO2_24
+SpO2_25,SpO2_25
+SpO2_26,SpO2_26
+SpO2_27,SpO2_27
+SpO2_28,SpO2_28
+SpO2_29,SpO2_29
+SpO2_30,SpO2_30
+SpO2_31,SpO2_31
+SpO2_32,SpO2_32
+SpO2_33,SpO2_33
+SpO2_34,SpO2_34
+SpO2_35,SpO2_35
+SpO2_36,SpO2_36
+SpO2_37,SpO2_37
+SpO2_38,SpO2_38
+SpO2_39,SpO2_39
+SpO2_40,SpO2_40
+SpO2_41,SpO2_41
+SpO2_42,SpO2_42
+SpO2_43,SpO2_43
+SpO2_44,SpO2_44
+SpO2_45,SpO2_45
+SpO2_46,SpO2_46
+SpO2_47,SpO2_47
+SpO2_48,SpO2_48
+Anion gap_24,Anion gap_24
+Anion gap_48,Anion gap_48
+BUN_24,BUN_24
+BUN_48,BUN_48
+Calcium non-ionized_24,Calcium non-ionized_24
+Calcium non-ionized_48,Calcium non-ionized_48
+Chloride (serum)_24,Chloride (serum)_24
+Chloride (serum)_48,Chloride (serum)_48
+Creatinine (serum)_24,Creatinine (serum)_24
+Creatinine (serum)_48,Creatinine (serum)_48
+Glucose (serum)_24,Glucose (serum)_24
+Glucose (serum)_48,Glucose (serum)_48
+Glucose FS (range 70 -100)_24,Glucose FS (range 70 -100)_24
+Glucose FS (range 70 -100)_48,Glucose FS (range 70 -100)_48
+HCO3 (serum)_24,HCO3 (serum)_24
+HCO3 (serum)_48,HCO3 (serum)_48
+Hematocrit (serum)_24,Hematocrit (serum)_24
+Hematocrit (serum)_48,Hematocrit (serum)_48
+Hemoglobin_24,Hemoglobin_24
+Hemoglobin_48,Hemoglobin_48
+INR_24,INR_24
+INR_48,INR_48
+Magnesium_24,Magnesium_24
+Magnesium_48,Magnesium_48
+NBPd_24,NBPd_24
+NBPd_48,NBPd_48
+NBPm_24,NBPm_24
+NBPm_48,NBPm_48
+NBPs_24,NBPs_24
+NBPs_48,NBPs_48
+PT_24,PT_24
+PT_48,PT_48
+PTT_24,PTT_24
+PTT_48,PTT_48
+Phosphorous_24,Phosphorous_24
+Phosphorous_48,Phosphorous_48
+Platelet Count_24,Platelet Count_24
+Platelet Count_48,Platelet Count_48
+Potassium (serum)_24,Potassium (serum)_24
+Potassium (serum)_48,Potassium (serum)_48
+Sodium (serum)_24,Sodium (serum)_24
+Sodium (serum)_48,Sodium (serum)_48
+Temperature F_24,Temperature F_24
+Temperature F_48,Temperature F_48
+WBC_24,WBC_24
+WBC_48,WBC_48
+ALT,ACD-A Citrate (1000ml)
+AST,ACD-A Citrate (500ml)
+Albumin,Acetaminophen-IV
+Alkaline Phosphate,Acetylcysteine
+Apnea Interval,Acyclovir
+Arterial Base Excess,Adenosine
+CK (CPK),Albumin 25%
+Cuff Pressure,Albumin 5%
+Expiratory Ratio,Alteplase (TPA)
+FiO2,Ambisome
+Fspn High,Amikacin
+Glucose (whole blood),Amino Acids
+IT,Aminocaproic acid (Amicar)
+Inspiratory Ratio,Amiodarone
+Ionized Calcium,Amiodarone 600/500
+Lactic Acid,Ampicillin
+Mean Airway Pressure,Ampicillin/Sulbactam (Unasyn)
+Minute Volume,Argatroban
+O2 Flow,Atovaquone
+PCO2 (Arterial),Atropine
+PEEP set,Azithromycin
+PH (Arterial),Aztreonam
+PH (dipstick),Bactrim (SMX/TMP)
+PO2 (Arterial),Beneprotein
+PSV Level,Beneprotein.
+Paw High,Boost Glucose Control (Full)
+Peak Insp. Pressure,Calcium Gluconate
+Plateau Pressure,Calcium Gluconate (CRRT)
+Respiratory Rate (Set),Carafate (Sucralfate)
+Respiratory Rate (Total),Cath Lab Intake
+Respiratory Rate (spontaneous),Cefazolin
+Specific Gravity (urine),Cefepime
+Spont RR,Ceftazidime
+Spont Vt,Ceftriaxone
+TCO2 (calc) Arterial,Ciprofloxacin
+Tidal Volume (observed),Cisatracurium
+Tidal Volume (set),Citrate
+Tidal Volume (spontaneous),Clevidipine (Cleviprex)
+Total Bilirubin,Clindamycin
+Total PEEP Level,Coumadin (Warfarin)
+Troponin-T,Cryoprecipitate
+Ventilator Tank #1,D5 1/2NS
+Ventilator Tank #2,D5 1/4NS
+Vti High,D5LR
+ACD-A Citrate (1000ml),D5NS
+ACD-A Citrate (500ml),Daptomycin
+Acetaminophen-IV,Dexmedetomidine (Precedex)
+Acetylcysteine,Dextrose 10%
+Acyclovir,Dextrose 5%
+Adenosine,Dextrose 50%
+Albumin 25%,Dextrose PN
+Albumin 5%,Diazepam (Valium)
+Alteplase (TPA),Digoxin (Lanoxin)
+Ambisome,Dilantin
+Amikacin,Diltiazem
+Amino Acids,Dobutamine
+Aminocaproic acid (Amicar),Dopamine
+Amiodarone,Doxycycline
+Amiodarone 600/500,Enoxaparin (Lovenox)
+Ampicillin,Ensure (Full)
+Ampicillin/Sulbactam (Unasyn),Ensure Plus (Full)
+Argatroban,Epinephrine
+Atovaquone,Epinephrine.
+Atropine,Eptifibatide (Integrilin)
+Azithromycin,Erythromycin
+Aztreonam,Esmolol
+Bactrim (SMX/TMP),FFP
+Beneprotein,Factor VIIa
+Beneprotein.,Famotidine (Pepcid)
+Boost Glucose Control (Full),Fentanyl
+Calcium Gluconate,Fentanyl (Concentrate)
+Calcium Gluconate (CRRT),Fiber Supplement
+Carafate (Sucralfate),Fibersource HN (Full)
+Cath Lab Intake,Fluconazole
+Cefazolin,Folic Acid
+Cefepime,Fondaparinux
+Ceftazidime,Fosphenytoin
+Ceftriaxone,Free Water
+Ciprofloxacin,Furosemide (Lasix)
+Cisatracurium,Furosemide (Lasix) 250/50
+Citrate,GT Flush
+Clevidipine (Cleviprex),Gastric Meds
+Clindamycin,Gentamicin
+Coumadin (Warfarin),Glucerna (Full)
+Cryoprecipitate,Glucerna 1.2 (Full)
+D5 1/2NS,Glucerna 1.5 (Full)
+D5 1/4NS,Glycopyrolate (Robinul)
+D5LR,Haloperidol (Haldol)
+D5NS,Heparin Sodium
+Daptomycin,Heparin Sodium (Prophylaxis)
+Dexmedetomidine (Precedex),Hetastarch (Hespan) 6%
+Dextrose 10%,Hydralazine
+Dextrose 5%,Hydrochloric Acid - HCL
+Dextrose 50%,Hydromorphone (Dilaudid)
+Dextrose PN,IVIG
+Diazepam (Valium),Imipenem/Cilastatin
+Digoxin (Lanoxin),Impact (Full)
+Dilantin,Impact with Fiber (Full)
+Diltiazem,Insulin - 70/30
+Dobutamine,Insulin - Glargine
+Dopamine,Insulin - Humalog
+Doxycycline,Insulin - Humalog 75/25
+Enoxaparin (Lovenox),Insulin - NPH
+Ensure (Full),Insulin - Novolog
+Ensure Plus (Full),Insulin - Regular
+Epinephrine,Isoniazid
+Epinephrine.,Isosource 1.5 (Full)
+Eptifibatide (Integrilin),Jevity 1.2 (Full)
+Erythromycin,Jevity 1.5 (Full)
+Esmolol,K Phos
+FFP,KCL (Bolus)
+Factor VIIa,KCl (CRRT)
+Famotidine (Pepcid),Keflex
+Fentanyl,Ketamine
+Fentanyl (Concentrate),Ketorolac (Toradol)
+Fiber Supplement,LR
+Fibersource HN (Full),Labetalol
+Fluconazole,Lansoprazole (Prevacid)
+Folic Acid,Levetiracetam (Keppra)
+Fondaparinux,Levofloxacin
+Fosphenytoin,Lidocaine
+Free Water,Linezolid
+Furosemide (Lasix),Lipids (additive)
+Furosemide (Lasix) 250/50,Lorazepam (Ativan)
+GT Flush,Magnesium Sulfate
+Gastric Meds,Magnesium Sulfate (Bolus)
+Gentamicin,Mannitol
+Glucerna (Full),Meperidine (Demerol)
+Glucerna 1.2 (Full),Meropenem
+Glucerna 1.5 (Full),Methadone Hydrochloride
+Glycopyrolate (Robinul),Metoprolol
+Haloperidol (Haldol),Metronidazole
+Heparin Sodium,Micafungin
+Heparin Sodium (Prophylaxis),Midazolam (Versed)
+Hetastarch (Hespan) 6%,Milrinone
+Hydralazine,Morphine Sulfate
+Hydrochloric Acid - HCL,Multivitamins
+Hydromorphone (Dilaudid),Na Phos
+IVIG,NaCl 0.45%
+Imipenem/Cilastatin,NaCl 0.9%
+Impact (Full),NaCl 23.4%
+Impact with Fiber (Full),NaCl 3% (Hypertonic Saline)
+Insulin - 70/30,Nafcillin
+Insulin - Glargine,Naloxone (Narcan)
+Insulin - Humalog,Neostigmine (Prostigmin)
+Insulin - Humalog 75/25,Nepro (Full)
+Insulin - NPH,Nicardipine
+Insulin - Novolog,Nitroglycerin
+Insulin - Regular,Nitroprusside
+Isoniazid,Norepinephrine
+Isosource 1.5 (Full),NovaSource Renal (Full)
+Jevity 1.2 (Full),Nutren 2.0 (Full)
+Jevity 1.5 (Full),Nutren Pulmonary (Full)
+K Phos,Nutren Renal (1/2)
+KCL (Bolus),Nutren Renal (Full)
+KCl (CRRT),OR Cell Saver Intake
+Keflex,OR Colloid Intake
+Ketamine,OR Cryoprecipitate Intake
+Ketorolac (Toradol),OR Crystalloid Intake
+LR,OR FFP Intake
+Labetalol,OR Packed RBC Intake
+Lansoprazole (Prevacid),OR Platelet Intake
+Levetiracetam (Keppra),Octreotide
+Levofloxacin,Omeprazole (Prilosec)
+Lidocaine,Ondansetron (Zofran)
+Linezolid,Osmolite 1.5 (Full)
+Lipids (additive),PACU Crystalloid Intake
+Lorazepam (Ativan),PACU FFP Intake
+Magnesium Sulfate,PACU Packed RBC Intake
+Magnesium Sulfate (Bolus),PO Intake
+Mannitol,PRBC's
+Meperidine (Demerol),Pantoprazole (Protonix)
+Meropenem,Penicillin G potassium
+Methadone Hydrochloride,Pentobarbital
+Metoprolol,Peptamen Bariatric (Full)
+Metronidazole,Peripheral Parenteral Nutrition
+Micafungin,Phenylephrine
+Midazolam (Versed),Phenylephrine (50/250)
+Milrinone,Piggyback
+Morphine Sulfate,Piperacillin
+Multivitamins,Piperacillin/Tazobactam (Zosyn)
+Na Phos,Plasma Pheresis
+NaCl 0.45%,Platelets
+NaCl 0.9%,Potassium Chloride - KCL
+NaCl 23.4%,Pre-Admission/Non-ICU Intake
+NaCl 3% (Hypertonic Saline),ProBalance (Full)
+Nafcillin,Profilnine
+Naloxone (Narcan),Promote (Full)
+Neostigmine (Prostigmin),Promote with Fiber (Full)
+Nepro (Full),Propofol
+Nicardipine,Protamine sulfate
+Nitroglycerin,Pulmocare (1/4)
+Nitroprusside,Pulmocare (Full)
+Norepinephrine,Ranitidine (Prophylaxis)
+NovaSource Renal (Full),Replete (1/4)
+Nutren 2.0 (Full),Replete (Full)
+Nutren Pulmonary (Full),Replete with Fiber (1/2)
+Nutren Renal (1/2),Replete with Fiber (1/4)
+Nutren Renal (Full),Replete with Fiber (Full)
+OR Cell Saver Intake,Rifampin
+OR Colloid Intake,Rocuronium
+OR Cryoprecipitate Intake,Sodium Bicarbonate 8.4%
+OR Crystalloid Intake,Sodium Bicarbonate 8.4% (Amp)
+OR FFP Intake,Solution
+OR Packed RBC Intake,Sterile Water
+OR Platelet Intake,TPN w/ Lipids
+Octreotide,TPN without Lipids
+Omeprazole (Prilosec),Thiamine
+Ondansetron (Zofran),Tigecycline
+Osmolite 1.5 (Full),Tobramycin
+PACU Crystalloid Intake,Two Cal HN (Full)
+PACU FFP Intake,Vancomycin
+PACU Packed RBC Intake,Vasopressin
+PO Intake,Vecuronium
+PRBC's,Verapamil
+Pantoprazole (Protonix),Vital 1.5 (Full)
+Penicillin G potassium,Vital High Protein (Full)
+Pentobarbital,Vitamin K (Phytonadione)
+Peptamen Bariatric (Full),Vivonex (Full)
+Peripheral Parenteral Nutrition,Voriconazole
+Phenylephrine,
+Phenylephrine (50/250),
+Piggyback,
+Piperacillin,
+Piperacillin/Tazobactam (Zosyn),
+Plasma Pheresis,
+Platelets,
+Potassium Chloride - KCL,
+Pre-Admission/Non-ICU Intake,
+ProBalance (Full),
+Profilnine,
+Promote (Full),
+Promote with Fiber (Full),
+Propofol,
+Protamine sulfate,
+Pulmocare (1/4),
+Pulmocare (Full),
+Ranitidine (Prophylaxis),
+Replete (1/4),
+Replete (Full),
+Replete with Fiber (1/2),
+Replete with Fiber (1/4),
+Replete with Fiber (Full),
+Rifampin,
+Rocuronium,
+Sodium Bicarbonate 8.4%,
+Sodium Bicarbonate 8.4% (Amp),
+Solution,
+Sterile Water,
+TPN w/ Lipids,
+TPN without Lipids,
+Thiamine,
+Tigecycline,
+Tobramycin,
+Two Cal HN (Full),
+Vancomycin,
+Vasopressin,
+Vecuronium,
+Verapamil,
+Vital 1.5 (Full),
+Vital High Protein (Full),
+Vitamin K (Phytonadione),
+Vivonex (Full),
+Voriconazole,

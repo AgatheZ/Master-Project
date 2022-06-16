@@ -9,11 +9,13 @@ from sklearn.datasets import make_classification
 from sklearn.metrics import plot_confusion_matrix
 import statistics
 import numpy as np
+import pandas as pd
 import shap
 
 
+
 class Evaluation:
-    def __init__(self, model, model_name, X, y, random_state, SHAP, feature_names):
+    def __init__(self, model, model_name, X, y, random_state, SHAP, feature_names, nb_hours):
         self.model = model
         self.model_name = model_name
         self.X = X
@@ -21,6 +23,7 @@ class Evaluation:
         self.random_state = random_state
         self.SHAP = SHAP
         self.feature_names = feature_names
+        self.nb_hours = nb_hours
     
     def ROC_plot(self, rocs, fprs, tprs):
     # Compute ROC curve and ROC area for each class
@@ -50,21 +53,8 @@ class Evaluation:
         # show the legend
         plt.legend()
         # show the plot
-        plt.title('Length of stay prediction (> 4 days) for TBI patients \n ROC curve - 48h')
+        plt.title('Length of stay prediction (> 4 days) for TBI patients \n ROC curve - %fh' %nb_hours)
         plt.show()
-
-    def SHAP_plot(self, l_shaps_values, l_test_index):
-        print(l_test_index[1])
-        print(l_shaps_values[0])
-        test_set = l_test_index[0]
-        shap_values = np.array(l_shaps_values[0])
-        for i in range(1,len(l_test_index)):
-            test_set = np.concatenate((test_set, l_test_index[i]),axis=0)
-            shap_values = np.concatenate((shap_values,np.array(l_shaps_values[i])),axis=1)
-
-        #bringing back variable names    
-        X_test = self.X[test_set]
-        shap.summary_plot(shap_values[1], X_test)
 
 
     def evaluate(self):
@@ -88,7 +78,6 @@ class Evaluation:
             fpr, tpr, _ = roc_curve(y_test, y_pred_proba)
             accuracy = accuracy_score(y_test, y_pred)
             auroc = roc_auc_score(y_test, y_pred_proba)
-
             f1 = f1_score(y_test, y_pred)
             print('Accuracy:', accuracy)
             print('f1:', f1)
@@ -103,9 +92,10 @@ class Evaluation:
             
             if self.SHAP:
                 ex = shap.TreeExplainer(xgbc)
-                shaps_values.append(ex.shap_values(X_test))
-                test_idx.append(test_index)
 
+                shaps_values = ex.shap_values(X_test)
+                shap.summary_plot(shaps_values, pd.DataFrame(X_test, columns = self.feature_names))
+                self.SHAP = False
 
         print('Averaged accuracy (5-folds): %.3f ±  %.3f' % (np.mean(accs), statistics.stdev(accs)))
         print('Averaged f1-Score (5-folds): %.3f ±  %.3f' % (np.mean(f1s), statistics.stdev(f1s)))
@@ -114,4 +104,4 @@ class Evaluation:
         
         plt.figure()
         self.ROC_plot(rocs, fprs, tprs)
-        self.SHAP_plot(shaps_values, test_index)
+

@@ -19,7 +19,7 @@ from hyp_tuning import HypTuning
 warnings.filterwarnings("ignore")
 
 ##Variables 
-nb_hours = 48
+nb_hours = 48 
 random_state = 1
 
 ##data loading 
@@ -28,16 +28,43 @@ df_24h = pd.read_csv(r'C:\Users\USER\Documents\Imperial\Summer_project\Azure\dat
 df_48h = pd.read_csv(r'C:\Users\USER\Documents\Imperial\Summer_project\Azure\data\preprocessed_mimic4_48hour.csv', delimiter=',')
 df_med = pd.read_csv(r'C:\Users\USER\Documents\Imperial\Summer_project\Azure\data\preprocessed_mimic4_med.csv', delimiter=',')
 df_demographic = pd.read_csv(r'C:\Users\USER\Documents\Imperial\Summer_project\Azure\data\demographics_mimic4.csv', delimiter=',')
+features = pd.read_csv(r'Master-Project\MIMIC_IV\resources\features.csv', header = None)
+
+
+
+
+if nb_hours == 24:
+   features = features.loc[:415,1] 
+else:
+   features = features.loc[:,0]
+
+
 
 df_hourly = df_hourly.drop(columns = ['icu_intime'])
 df_24h = df_24h.drop(columns = ['icu_intime'])
 df_48h = df_48h.drop(columns = ['icu_intime'])
 
+
+
+
+
+
 #Preprocessing
 ##truncate to only get 48 hours of stay.
 df_hourly = pr.trunc_length(df_hourly, nb_hours)
 df_24h = pr.trunc_length(df_24h, nb_hours//24)
-df_demographic, df_med, df_hourly, df_24h, df_48h = pr.arrange_ids(df_demographic, df_med, df_hourly, df_24h, df_48h)
+# df_demographic, df_med, df_hourly, df_24h, df_48h = pr.arrange_ids(df_demographic, df_med, df_hourly, df_24h, df_48h)
+
+
+ids_h = df_hourly.stay_id.unique()
+ids_24h = df_24h.stay_id.unique()
+ids_48h = df_48h.stay_id.unique()
+ids_dem = df_demographic.stay_id.unique()
+ids_med = df_hourly.stay_id.unique()
+
+
+print(len(ids_h), len(ids_24h), len(ids_48h), len(ids_dem), len(ids_med))
+
 
 
 ##label extraction 
@@ -45,6 +72,7 @@ labels = df_demographic.pop('los')
 labels[labels <= 4] = 0
 labels[labels > 4] = 1
 labels = labels.values
+
 
 ##pivot the tables 
 df_hourly = df_hourly.pivot_table(index = ['stay_id', 'hour_from_intime'], columns = 'feature_name', values = 'feature_mean_value')
@@ -91,6 +119,7 @@ df_med = df_med.drop(columns = 'stay_id')
 df_demographic = df_demographic.drop(columns = 'stay_id')
 
 
+
 ##first linear inputation and then replaced by mean when it's not possible 
 ##pas incroyable de recalculer le mean à chaque itération... é changer 
 
@@ -109,11 +138,17 @@ for i in range(len(batch_hourly)):
 
 #feature concatenation 
 stratify_param = df_demographic.gcs
-final_data = np.array([[np.concatenate([np.concatenate(batch_demographic[i].values), np.concatenate(batch_hourly[i].values), np.concatenate(batch_24h[i].values),np.concatenate(batch_48h[i].values), np.concatenate(batch_med[i].values)])] for i in range(len(batch_hourly))])
+
+if nb_hours == 24:
+   final_data = np.array([[np.concatenate([np.concatenate(batch_demographic[i].values), np.concatenate(batch_hourly[i].values), np.concatenate(batch_24h[i].values), np.concatenate(batch_med[i].values)])] for i in range(len(batch_hourly))])
+else: 
+   final_data = np.array([[np.concatenate([np.concatenate(batch_demographic[i].values), np.concatenate(batch_hourly[i].values), np.concatenate(batch_24h[i].values), np.concatenate(batch_48h[i].values), np.concatenate(batch_med[i].values)])] for i in range(len(batch_hourly))])
+
+
 final_data = np.squeeze(final_data).astype('float64')
 final_data = normalize(final_data)
-feature_names = np.concatenate((pr.get_column_name(df_demographic), pr.get_column_name(df_hourly), pr.get_column_name(df_24h), pr.get_column_name(df_48h), pr.get_column_name(df_med)))
-
+# feature_names = np.concatenate((pr.get_column_name(batch_demographic[1]), pr.get_column_name(batch_hourly[1]), pr.get_column_name(batch_24h[1]), pr.get_column_name(batch_48h[1]), pr.get_column_name(batch_med[1])))
+# pd.DataFrame(feature_names).to_csv('features_test_to_delete.csv')
 
 #XGBOOST MODEL 
 X_train, X_test, y_train, y_test = train_test_split(final_data, labels, test_size=0.2, shuffle = True, random_state=random_state)
@@ -136,11 +171,14 @@ X_train, X_val, y_train, y_val  = train_test_split(X_train, y_train, test_size=0
 # best_param = xgboost_hyp_tuning.hyperopt()
 
 # final models evaluation using 5-fold cross validation  
-best_param = {'alpha': 0, 'colsample_bytree': 0.55, 'eta': 0.04, 'gamma': 3.91, 'max_depth': 6, 'min_child_weight': 2}
+
+if nb_hours == 24:
+   best_param = {'alpha': 0, 'colsample_bytree': 0.63, 'eta': 0.26, 'gamma': 5.8, 'max_depth': 15, 'min_child_weight': 5}
+else:
+   best_param = {'alpha': 0, 'colsample_bytree': 0.55, 'eta': 0.04, 'gamma': 3.91, 'max_depth': 6, 'min_child_weight': 2}
+
+
 depth = best_param['max_depth']
-
-
-
 model =  XGBClassifier(random_state = random_state, 
                         max_depth = int(depth), 
                         gamma = best_param['gamma'],
@@ -150,7 +188,7 @@ model =  XGBClassifier(random_state = random_state,
                         min_child_weight=(best_param['min_child_weight']),
                         colsample_bytree=best_param['colsample_bytree'])
 
-eval = Evaluation(model, 'Tuned XGBoost', final_data, labels, random_state, True, feature_names)
+eval = Evaluation(model, 'Tuned XGBoost', final_data, labels, random_state, True, features, nb_hours)
 eval.evaluate()
 
 

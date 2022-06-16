@@ -4,13 +4,6 @@ import matplotlib.pyplot as plt
 from matplotlib.pyplot import cm
 import seaborn as sns
 
-
-def trunc_length(ds, nb_hours):
-#function that truncates the data to only consider the first nb_hours hours
-    df = ds.loc[ds.hour_from_intime <=  nb_hours]
-    df = df.loc[df.hour_from_intime > 0]
-    return df
-
 def create_batchs(ds):
     batchs = []
     ids = ds.stay_id.unique()
