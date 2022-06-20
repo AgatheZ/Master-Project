@@ -53,7 +53,7 @@ class Evaluation:
         # show the legend
         plt.legend()
         # show the plot
-        plt.title('Length of stay prediction (> 4 days) for TBI patients \n ROC curve - %fh' %nb_hours)
+        plt.title('Length of stay prediction (> 4 days) for TBI patients \n ROC curve - %.0fh' %self.nb_hours)
         plt.show()
 
 
@@ -92,7 +92,6 @@ class Evaluation:
             
             if self.SHAP:
                 ex = shap.TreeExplainer(xgbc)
-
                 shaps_values = ex.shap_values(X_test)
                 shap.summary_plot(shaps_values, pd.DataFrame(X_test, columns = self.feature_names))
                 self.SHAP = False

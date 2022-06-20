@@ -11,6 +11,11 @@ def create_batchs(ds):
         batchs.append(ds.loc[ds['stay_id'] == i])
     return batchs
 
+def label_severity (row):
+    if row['gcs'] <= 8 :
+        return "severe"
+    return "mild"
+    
 def remove_missing(df, var, threshold):
 #remove from batch the entries where a too large proportion of the variables var are missing 
     res = df

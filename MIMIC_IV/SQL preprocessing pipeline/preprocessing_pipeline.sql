@@ -42,6 +42,21 @@ ce.stay_id = tbi.stay_id
 WHERE ((fl.param_type like '%Numeric%')) AND (((fl.category != 'Alarms') AND (fl.category != 'General')));
 
 
+--medication table
+DROP TABLE IF EXISTS mimiciv.cohort_med;
+CREATE TABLE mimiciv.cohort_med
+AS
+
+SELECT tbi.stay_id, fl.abbreviation as med_name, inpt.amount
+FROM mimic_icu.inputevents inpt
+JOIN mimic_icu.d_items fl 
+ON fl.itemid = inpt.itemid
+JOIN mimiciv.lookup lk 
+ON lk.vital_name = fl.abbreviation
+JOIN mimiciv.tbi tbi ON
+inpt.stay_id = tbi.stay_id
+;
+
 
 --- Data aggregation - 48 HOURS 
 DROP TABLE IF EXISTS  mimiciv.aggregated_vitals_48h CASCADE;
@@ -153,8 +168,6 @@ LEFT JOIN  mimic_icu.icustays icu
 ON vit.stay_id = icu.stay_id
 JOIN mimiciv.lookup lk
 ON vit.vital_name = lk.vital_name
-JOIN mimiciv.final_ids q ON
-q.stay_id = vit.stay_id
 WHERE lk.aggregation = '1' AND icu.los >= 2
 
 
@@ -200,8 +213,6 @@ LEFT JOIN  mimic_icu.icustays icu
 ON vit.stay_id = icu.stay_id
 JOIN mimiciv.lookup lk
 ON vit.vital_name = lk.vital_name
-JOIN mimiciv.final_ids q ON
-q.stay_id = vit.stay_id
 WHERE lk.aggregation = '24' AND icu.los >= 2
 
 
@@ -226,21 +237,6 @@ FROM aggregated
 GROUP BY stay_id, icu_intime, hour_from_intime, feature_name, feature_mean_value
 ORDER BY stay_id, hour_from_intime;
 
---- Get table of future One-hot (medicine)
-DROP TABLE IF EXISTS mimiciv.cohort_med;
-CREATE TABLE mimiciv.cohort_med
-AS
-
-SELECT tbi.stay_id, fl.abbreviation as med_name, inpt.amount
-FROM mimic_icu.inputevents inpt
-JOIN mimic_icu.d_items fl 
-ON fl.itemid = inpt.itemid
-JOIN mimiciv.lookup lk 
-ON lk.vital_name = fl.abbreviation
-RIGHT JOIN mimiciv.tbi tbi ON
-inpt.stay_id = tbi.stay_id
-JOIN mimiciv.final_ids q ON
-q.stay_id = tbi.stay_id;
 
 ---Get demographic table 
 DROP TABLE IF EXISTS mimiciv.demographics;
@@ -267,8 +263,6 @@ JOIN mimic_icu.d_items fl
 ON fl.itemid = ce.itemid
 JOIN mimiciv.TBI ON
 ce.stay_id = tbi.stay_id
-JOIN mimiciv.final_ids q ON
-q.stay_id = tbi.stay_id
 WHERE fl.itemid IN (220739, 223900, 223901) 
 ),
 
@@ -297,16 +291,77 @@ WHERE rest.stay_id = averaged.stay_id
 GROUP BY rest.stay_id, rest.gender, rest.age, rest.los, rest.bmi, rest.death
 ;
 
----Get vitals table 
--- DROP TABLE IF EXISTS mimiciv.final_stays;
--- CREATE TABLE mimiciv.final_stays AS
+---Intersect the stays of all the tables to have the final cohort 
+DROP TABLE IF EXISTS mimiciv.final_stays;
+CREATE TABLE mimiciv.final_stays
+AS
 
--- SELECT h.stay_id FROM mimiciv.aggregated_vitals_hourly h 
--- JOIN mimiciv.aggregated_vitals_24h v 
--- ON v.stay_id = h.stay_id
--- JOIN mimiciv.aggregated_vitals_48h q 
--- ON q.stay_id = h.stay_id
--- JOIN mimiciv.cohort_med m
--- ON m.stay_id = h.stay_id
 
--- ;
+SELECT stay_id
+FROM mimiciv.aggregated_vitals_24h
+INTERSECT
+SELECT stay_id
+FROM mimiciv.aggregated_vitals_48h
+INTERSECT
+SELECT stay_id
+FROM mimiciv.aggregated_vitals_hourly
+INTERSECT
+SELECT stay_id
+FROM mimiciv.cohort_med
+INTERSECT
+SELECT stay_id
+FROM mimiciv.demographics; 
+
+
+---Get final vital tables 
+--hourly
+DROP TABLE IF EXISTS mimiciv.final_h;
+CREATE TABLE mimiciv.final_h
+AS
+
+SELECT s.* from mimiciv.aggregated_vitals_hourly t
+JOIN mimiciv.final_stays s 
+ON s.stay_id = t.stay_id;
+
+--24
+DROP TABLE IF EXISTS mimiciv.final_24;
+CREATE TABLE mimiciv.final_24
+AS
+
+SELECT s.* from mimiciv.aggregated_vitals_24h t
+JOIN mimiciv.final_stays s 
+ON s.stay_id = t.stay_id;
+
+--48
+DROP TABLE IF EXISTS mimiciv.final_48;
+CREATE TABLE mimiciv.final_48
+AS
+
+SELECT s.* from mimiciv.aggregated_vitals_48h t
+JOIN mimiciv.final_stays s 
+ON s.stay_id = t.stay_id;
+
+--med
+DROP TABLE IF EXISTS mimiciv.final_med;
+CREATE TABLE mimiciv.final_med
+AS
+
+SELECT s.* from mimiciv.cohort_med t
+JOIN mimiciv.final_stays s 
+ON s.stay_id = t.stay_id;
+
+---demographics
+DROP TABLE IF EXISTS mimiciv.final_dem;
+CREATE TABLE mimiciv.final_dem
+AS
+
+SELECT s.* from mimiciv.demographics t
+JOIN mimiciv.final_stays s 
+ON s.stay_id = t.stay_id;
+
+---print the final tables
+SELECT * FROM mimiciv.final_24;
+SELECT * FROM mimiciv.final_48;
+SELECT * FROM mimiciv.final_med;
+SELECT * FROM mimiciv.final_dem;
+SELECT * FROM mimiciv.final_h;
