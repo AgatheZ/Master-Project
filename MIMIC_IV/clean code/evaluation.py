@@ -15,7 +15,7 @@ import shap
 
 
 class Evaluation:
-    def __init__(self, model, model_name, X, y, random_state, SHAP, feature_names, nb_hours):
+    def __init__(self, model, model_name, dual, X, y, random_state, SHAP, feature_names, nb_hours, severity):
         self.model = model
         self.model_name = model_name
         self.X = X
@@ -24,6 +24,9 @@ class Evaluation:
         self.SHAP = SHAP
         self.feature_names = feature_names
         self.nb_hours = nb_hours
+        self.severity = severity
+
+
     
     def ROC_plot(self, rocs, fprs, tprs):
     # Compute ROC curve and ROC area for each class
@@ -53,7 +56,7 @@ class Evaluation:
         # show the legend
         plt.legend()
         # show the plot
-        plt.title('Length of stay prediction (> 4 days) for TBI patients \n ROC curve - %.0fh' %self.nb_hours)
+        plt.title('Length of stay prediction (> 4 days) for %s TBI patients \n ROC curve - %.0fh'%(self.severity, self.nb_hours))
         plt.show()
 
 

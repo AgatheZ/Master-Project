@@ -46,16 +46,29 @@ if TBI_split:
    df_demographic['severity'] = df_demographic.apply(lambda row: pr.label_severity(row), axis=1)
    mild_idx = df_demographic[df_demographic['severity'] == 'mild']['stay_id']
    severe_idx = df_demographic[df_demographic['severity'] == 'severe']['stay_id']
-
-
+   df_demographic.pop('severity')
 
 #Preprocessing
 
 ##label extraction 
-labels = df_demographic.pop('los')
-labels[labels <= 4] = 0
-labels[labels > 4] = 1
-labels = labels.values
+if TBI_split:
+   labels_mild = df_demographic[df_demographic.stay_id.isin(mild_idx)].pop('los')
+   labels_mild[labels_mild <= 4] = 0
+   labels_mild[labels_mild > 4] = 1
+   labels_mild = labels_mild.values
+
+   labels_severe = df_demographic[df_demographic.stay_id.isin(severe_idx)].pop('los')
+   labels_severe[labels_severe <= 4] = 0
+   labels_severe[labels_severe > 4] = 1
+   labels_severe = labels_severe.values
+
+   df_demographic.pop('los')
+
+else:
+   labels = df_demographic.pop('los')
+   labels[labels <= 4] = 0
+   labels[labels > 4] = 1
+   labels = labels.values
 
 ##pivot the tables 
 df_hourly = df_hourly.pivot_table(index = ['stay_id', 'hour_from_intime'], columns = 'feature_name', values = 'feature_mean_value')
@@ -78,18 +91,18 @@ df_24h = df_24h.reset_index(level=['stay_id'])
 df_48h = df_48h.reset_index(level=['stay_id'])
 df_med = df_med.reset_index(level=['stay_id'])
 
+
 if TBI_split:
-   batch_hourly_mild = pr.create_batchs(df_hourly[df_hourly['stay_id'] == mild_idx])
-   #FINIR ICI
-   batch_24h_mild = pr.create_batchs(df_24h.loc[mild_idx])
-   batch_48h_mild = pr.create_batchs(df_48h.loc[mild_idx])
-   batch_med_mild = pr.create_batchs(df_med.loc[mild_idx])
-   batch_demographic_mild = pr.create_batchs(df_demographic.loc[mild_idx])
-   batch_hourly_severe = pr.create_batchs(df_hourly.loc[severe_idx])
-   batch_24h_severe = pr.create_batchs(df_24h.loc[severe_idx])
-   batch_48h_severe = pr.create_batchs(df_48h.loc[severe_idx])
-   batch_med_severe = pr.create_batchs(df_med.loc[severe_idx])
-   batch_demographic_severe = pr.create_batchs(df_demographic.loc[severe_idx])
+   batch_hourly_mild = pr.create_batchs(df_hourly[df_hourly.stay_id.isin( mild_idx)])
+   batch_24h_mild = pr.create_batchs(df_24h[df_24h.stay_id.isin( mild_idx)])
+   batch_48h_mild = pr.create_batchs(df_48h[df_48h.stay_id.isin( mild_idx)])
+   batch_med_mild = pr.create_batchs(df_med[df_med.stay_id.isin( mild_idx)])
+   batch_demographic_mild = pr.create_batchs(df_demographic[df_demographic.stay_id.isin( mild_idx)])
+   batch_hourly_severe = pr.create_batchs(df_hourly[df_hourly.stay_id.isin(severe_idx)])
+   batch_24h_severe = pr.create_batchs(df_24h[df_24h.stay_id.isin(severe_idx)])
+   batch_48h_severe = pr.create_batchs(df_48h[df_48h.stay_id.isin(severe_idx)])
+   batch_med_severe = pr.create_batchs(df_med[df_med.stay_id.isin(severe_idx)])
+   batch_demographic_severe = pr.create_batchs(df_demographic[df_demographic.stay_id.isin(severe_idx)])
    
 else:
    batch_hourly = pr.create_batchs(df_hourly)
@@ -101,13 +114,11 @@ else:
 ##reindex for patients that don't have entries at the begginning of their stays + cut to 48h
 ##aggregation as well
 if TBI_split:
-   for i in range(len(batch_24h)):
+   for i in range(len(batch_24h_mild)):
          batch_hourly_mild[i] = batch_hourly_mild[i].reindex(range(1, nb_hours + 1), fill_value = None) 
          batch_24h_mild[i] = batch_24h_mild[i].reindex(range(1, nb_hours//24 + 1), fill_value = None)
          batch_48h_mild[i] = batch_48h_mild[i].reindex(range(1, nb_hours//24 + 1), fill_value = None)
-         batch_hourly_severe[i] = batch_hourly_severe[i].reindex(range(1, nb_hours + 1), fill_value = None) 
-         batch_24h_severe[i] = batch_24h_severe[i].reindex(range(1, nb_hours//24 + 1), fill_value = None)
-         batch_48h_severe[i] = batch_48h_severe[i].reindex(range(1, nb_hours//24 + 1), fill_value = None)
+         
          
          batch_hourly_mild[i] = batch_hourly_mild[i].drop(columns = 'stay_id')
          batch_24h_mild[i] = batch_24h_mild[i].drop(columns = 'stay_id')
@@ -115,12 +126,18 @@ if TBI_split:
          batch_med_mild[i] = batch_med_mild[i].drop(columns = 'stay_id')
          batch_demographic_mild[i] = batch_demographic_mild[i].drop(columns = 'stay_id')
          batch_48h_mild[i] = batch_48h_mild[i].agg([np.mean])
-         batch_hourly_severe[i] = batch_hourly_severe[i].drop(columns = 'stay_id')
-         batch_24h_severe[i] = batch_24h_severe[i].drop(columns = 'stay_id')
-         batch_48h_severe[i] = batch_48h_severe[i].drop(columns = 'stay_id')
-         batch_med_severe[i] = batch_med_severe[i].drop(columns = 'stay_id')
-         batch_demographic_severe[i] = batch_demographic_severe[i].drop(columns = 'stay_id')
-         batch_48h_severe[i] = batch_48h_severe[i].agg([np.mean])
+         
+
+   for i in range(len(batch_24h_severe)):
+      batch_hourly_severe[i] = batch_hourly_severe[i].reindex(range(1, nb_hours + 1), fill_value = None) 
+      batch_24h_severe[i] = batch_24h_severe[i].reindex(range(1, nb_hours//24 + 1), fill_value = None)
+      batch_48h_severe[i] = batch_48h_severe[i].reindex(range(1, nb_hours//24 + 1), fill_value = None)
+      batch_hourly_severe[i] = batch_hourly_severe[i].drop(columns = 'stay_id')
+      batch_24h_severe[i] = batch_24h_severe[i].drop(columns = 'stay_id')
+      batch_48h_severe[i] = batch_48h_severe[i].drop(columns = 'stay_id')
+      batch_med_severe[i] = batch_med_severe[i].drop(columns = 'stay_id')
+      batch_demographic_severe[i] = batch_demographic_severe[i].drop(columns = 'stay_id')
+      batch_48h_severe[i] = batch_48h_severe[i].agg([np.mean])
 else:
    for i in range(len(batch_24h)):
       batch_hourly[i] = batch_hourly[i].reindex(range(1, nb_hours + 1), fill_value = None) 
@@ -154,14 +171,13 @@ else:
 
 ##the stay ids column are dropped since we alreasy took care of them being in the same order for all datasets
 if TBI_split:
-   df_demographic_mild = df_demographic.drop(columns = 'stay_id').loc[mild_idx]
-   df_demographic_severe = df_demographic.drop(columns = 'stay_id').loc[severe_idx]
+   df_demographic_mild = df_demographic[df_demographic.stay_id.isin(mild_idx)].drop(columns = 'stay_id')
+   df_demographic_severe = df_demographic[df_demographic.stay_id.isin(severe_idx)].drop(columns = 'stay_id')
 else:
    df_demographic = df_demographic.drop(columns = 'stay_id')
 
 ##first linear inputation and then replaced by mean when it's not possible 
 ##pas incroyable de recalculer le mean à chaque itération... é changer 
-
 if TBI_split:
       for i in range(len(batch_hourly_mild)):
          batch_hourly_mild[i] = batch_hourly_mild[i].interpolate(limit = 15)
@@ -171,6 +187,8 @@ if TBI_split:
          batch_hourly_mild[i] = batch_hourly_mild[i].fillna(df_hourly_mild.mean())
          batch_demographic_mild[i].bmi = batch_demographic_mild[i].bmi.fillna(0)
          batch_demographic_mild[i].gcs = batch_demographic_mild[i].gcs.fillna(df_demographic_mild.gcs.mean())
+
+      for i in range(len(batch_hourly_severe)):
 
          batch_hourly_severe[i] = batch_hourly_severe[i].interpolate(limit = 15)
          batch_24h_severe[i] = batch_24h_severe[i].interpolate(limit = 15)
@@ -193,7 +211,7 @@ else:
 
 #feature concatenation 
 stratify_param = df_demographic.gcs
-
+print(batch_demographic_mild[1])
 if TBI_split:
       if nb_hours == 24:
          final_data_mild = np.array([[np.concatenate([np.concatenate(batch_demographic_mild[i].values), np.concatenate(batch_hourly_mild[i].values), np.concatenate(batch_24h_mild[i].values), np.concatenate(batch_med_mild[i].values)])] for i in range(len(batch_hourly_mild))])
@@ -228,11 +246,15 @@ else:
 # pd.DataFrame(feature_names).to_csv('features_test_to_delete.csv')
 
 #XGBOOST MODEL 
-X_train, X_test, y_train, y_test = train_test_split(final_data, labels, test_size=0.2, shuffle = True, random_state=random_state)
-X_train, X_val, y_train, y_val  = train_test_split(X_train, y_train, test_size=0.25, random_state=random_state)
+if TBI_split:
+   X_train, X_test, y_train, y_test = train_test_split(final_data_mild, labels_mild, test_size=0.2, shuffle = True, random_state=random_state)
+   X_train, X_val, y_train, y_val  = train_test_split(X_train, y_train, test_size=0.25, random_state=random_state)
+else:
+   X_train, X_test, y_train, y_test = train_test_split(final_data, labels, test_size=0.2, shuffle = True, random_state=random_state)
+   X_train, X_val, y_train, y_val  = train_test_split(X_train, y_train, test_size=0.25, random_state=random_state)
 
 # #hyperparameter tuning 
-
+print(final_data_mild.shape)
 space_hp ={'max_depth': (hp.quniform("max_depth", 3, 18, 1)),
         'gamma': hp.uniform ('gamma', 0,9),
         'alpha' : hp.quniform('alpha', 0,180,1),
@@ -244,17 +266,22 @@ space_hp ={'max_depth': (hp.quniform("max_depth", 3, 18, 1)),
         'seed': 0
     }
 
-#xgboost_hyp_tuning = HypTuning(5, space_hp, X_train, y_train, X_val, y_val, n_iter = 1000, random_state =random_state)
-#best_param = xgboost_hyp_tuning.hyperopt()
+print(labels_severe.sum())
+# xgboost_hyp_tuning = HypTuning(5, space_hp, X_train, y_train, X_val, y_val, n_iter = 1000, random_state =random_state)
+# best_param = xgboost_hyp_tuning.hyperopt()
 
 # final models evaluation using 5-fold cross validation  
 
-if nb_hours == 24:
-   best_param = {'alpha': 4.0, 'colsample_bytree': 0.6247402571982401, 'eta': 0.36200417198604184, 'gamma': 1.55002501704347, 'max_depth': 4.0, 'min_child_weight': 1.0}
+if TBI_split:
+   best_param_mild = {'alpha': 0.0, 'colsample_bytree': 0.5404929749427543, 'eta': 0.08602706957522405, 'gamma': 1.8786165006154019, 'max_depth': 17.0, 'min_child_weight': 3.0}
+   best_param_severe = {'alpha': 13.0, 'colsample_bytree': 0.6268493181974919, 'eta': 0.03821439650403947, 'gamma': 0.4555031107284915, 'max_depth': 15.0, 'min_child_weight': 10.0}
 else:
-   best_param = {'alpha': 0.0, 'colsample_bytree': 0.7336138546940976, 'eta': 0.3108407290269413, 'gamma': 2.3874687080350965, 'max_depth': 10.0, 'min_child_weight': 4.0}
+   if nb_hours == 24:
+      best_param = {'alpha': 4.0, 'colsample_bytree': 0.6247402571982401, 'eta': 0.36200417198604184, 'gamma': 1.55002501704347, 'max_depth': 4.0, 'min_child_weight': 1.0}
+   else:
+      best_param = {'alpha': 0.0, 'colsample_bytree': 0.7336138546940976, 'eta': 0.3108407290269413, 'gamma': 2.3874687080350965, 'max_depth': 10.0, 'min_child_weight': 4.0}
 
-
+best_param = best_param_mild
 depth = best_param['max_depth']
 model =  XGBClassifier(random_state = random_state, 
                         max_depth = int(depth), 
@@ -265,9 +292,15 @@ model =  XGBClassifier(random_state = random_state,
                         min_child_weight=(best_param['min_child_weight']),
                         colsample_bytree=best_param['colsample_bytree'])
 
-eval = Evaluation(model, 'Tuned XGBoost', final_data_mild, labels, random_state, True, features, nb_hours)
-eval.evaluate()
+if TBI_split:
+   eval = Evaluation(model, 'Tuned XGBoost', True, final_data_mild, labels_mild, random_state, True, features, nb_hours, 'mild')
+   eval.evaluate()
+   # eval = Evaluation(model, 'Tuned XGBoost', True, final_data_severe, labels_severe, random_state, True, features, nb_hours, 'severe')
+   # eval.evaluate()
 
+else:
+   eval = Evaluation(model, 'Tuned XGBoost', final_data, labels, random_state, True, features, nb_hours)
+   eval.evaluate()
 
 # #save the model 
 # filename = 'LOS_XGBoost_random_sampling.sav'
