@@ -15,7 +15,7 @@ import shap
 
 
 class Evaluation:
-    def __init__(self, model, model_name, dual, X, y, random_state, SHAP, feature_names, nb_hours, severity):
+    def __init__(self, model, model_name, X, y, random_state, SHAP, feature_names, nb_hours, severity = ''):
         self.model = model
         self.model_name = model_name
         self.X = X

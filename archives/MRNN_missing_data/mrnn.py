@@ -14,7 +14,8 @@ Contact: jsyoon0823@gmail.com
 """
 
 # Necessary Packages
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
 import logging
 tf.get_logger().setLevel(logging.ERROR)
 import numpy as np
