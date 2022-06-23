@@ -3,10 +3,17 @@ import torch
 from sklearn.metrics import roc_auc_score
 import GRU
 import pandas as pd 
+import torch.nn as nn
 from preprocessing import Preprocessing
+from torch.utils.data import TensorDataset, DataLoader
 import warnings
-
+import torch.utils.data as utils
+import time
+from sklearn.model_selection import (KFold, StratifiedKFold, cross_val_predict,
+                                     cross_validate, train_test_split)
 warnings.filterwarnings("ignore")
+
+time.clock = time.time
 
 #Parameters
 nb_hours = 24
@@ -16,63 +23,67 @@ tuning = False
 SHAP = False
 imputation = 'carry_forward'
 model_name = 'Stacking'
-hidden_size = 415
-output_size = 1
-input_size = 415 
-num_layers = 49 # num of step or layers base on the paper
+lr = 0.001
+learning_rate_decay = 7 
+n_epochs = 14
+batch_size = 32
 
-#functions
-def fit(model, criterion, learning_rate,\
-        train_dataloader, dev_dataloader, test_dataloader,\
-        learning_rate_decay=0, n_epochs=30):
-    epoch_losses = []
-    
-    # to check the update 
-    old_state_dict = {}
-    for key in model.state_dict():
-        old_state_dict[key] = model.state_dict()[key].clone()
-    
-    for epoch in range(n_epochs):
-        
-        if learning_rate_decay != 0:
+is_cuda = torch.cuda.is_available()
 
-            # every [decay_step] epoch reduce the learning rate by half
-            if  epoch % learning_rate_decay == 0:
-                learning_rate = learning_rate/2
-                optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
-                print('at epoch {} learning_rate is updated to {}'.format(epoch, learning_rate))
-        
-        # train the model
+# If we have a GPU available, we'll set our device to GPU. We'll use this device variable later in our code.
+if is_cuda:
+    device = torch.device("cuda")
+else:
+    device = torch.device("cpu")
+    
+def train(train_loader, dev_loader, test_loader, learn_rate, hidden_dim=24, EPOCHS=5, model_type="GRU"):
+    
+    # Setting common hyperparameters
+    input_dim = next(iter(train_loader))[0].shape[2]
+    hidden_dim = 24
+    output_dim = 1
+    n_layers = 20
+    # Instantiating the models
+    if model_type == "GRU":
+        model = GRU.GRUNet(input_dim, hidden_dim, output_dim, n_layers)
+    else:
+        model = GRU.LSTMNet(input_dim, hidden_dim, output_dim, n_layers)
+    model.to(device)
+    
+    # Defining loss function and optimizer
+    criterion = nn.BCELoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr=learn_rate)
+    model.train()
+    print("Starting Training of {} model".format(model_type))
+    epoch_times = []
+    # Start training loop
+    for epoch in range(1,EPOCHS+1):
+        start_time = time.clock()
+        h = model.init_hidden(batch_size)
+        avg_loss = 0.
+        counter = 0
         losses, acc = [], []
         label, pred = [], []
-        y_pred_col= []
+        epoch_losses = []
+        y_pred_col = []
+        
         model.train()
-        for train_data, train_label in train_dataloader:
-            # Zero the parameter gradients
-            optimizer.zero_grad()
+        for x, train_label in train_loader:
+            counter += 1
+            if model_type == "GRU":
+                h = h.data
+            else:
+                h = tuple([e.data for e in h])
+            model.zero_grad()
             
-            # Squeeze the data [1, 33, 49], [1,5] to [33, 49], [5]
-            train_data = torch.squeeze(train_data)
-            train_label = torch.squeeze(train_label)
-            
-            # Forward pass : Compute predicted y by passing train data to the model
-            y_pred = model(train_data)
-            
-            # y_pred = y_pred[:, None]
-            # train_label = train_label[:, None]
-            
-            #print(y_pred.shape)
-            #print(train_label.shape)
-            
-            # Save predict and label
-            y_pred_col.append(y_pred.item())
-            pred.append(y_pred.item() > 0.5)
-            label.append(train_label.item())
-            
-            #print('y_pred: {}\t label: {}'.format(y_pred, train_label))
+            y_pred, h = model(x.to(device).float(), h)
+            y_pred = torch.squeeze(y_pred)
+            print(y_pred)
+            y_pred_col.append(y_pred)
 
-            # Compute loss
-            loss = criterion(y_pred, train_label)
+            pred.append(y_pred > 0.5)
+            label.append(train_label)
+            loss = criterion(y_pred.float(), train_label.float())
             acc.append(
                 torch.eq(
                     (torch.sigmoid(y_pred).data > 0.5).float(),
@@ -80,77 +91,69 @@ def fit(model, criterion, learning_rate,\
             )
             losses.append(loss.item())
 
-            # perform a backward pass, and update the weights.
+            #backward pass 
             loss.backward()
             optimizer.step()
-
+            avg_loss += loss.item()
+            
+            if counter%200 == 0:
+                print("Epoch {}......Step: {}/{}....... Average Loss for Epoch: {}".format(epoch, counter, len(train_loader), avg_loss/counter))
         
         train_acc = torch.mean(torch.cat(acc).float())
         train_loss = np.mean(losses)
-        
         train_pred_out = pred
         train_label_out = label
+        model.eval()
         
-        # save new params
-        new_state_dict= {}
-        for key in model.state_dict():
-            new_state_dict[key] = model.state_dict()[key].clone()
-            
-        # compare params
-        for key in old_state_dict:
-            if (old_state_dict[key] == new_state_dict[key]).all():
-                print('Not updated in {}'.format(key))
-   
-        
-        # dev loss
+        #validation set 
         losses, acc = [], []
         label, pred = [], []
-        model.eval()
-        for dev_data, dev_label in dev_dataloader:
-            # Squeeze the data [1, 33, 49], [1,5] to [33, 49], [5]
-            dev_data = torch.squeeze(dev_data)
-            dev_label = torch.squeeze(dev_label)
-            
+        for dev_data, dev_label in dev_loader:
             # Forward pass : Compute predicted y by passing train data to the model
-            y_pred = model(dev_data)
+            if model_type == "GRU":
+                h = h.data
+            else:
+                h = tuple([e.data for e in h])
+            y_pred, h = model(dev_data.to(device).float(), h)
+            y_pred = torch.squeeze(y_pred)
             
             # Save predict and label
-            pred.append(y_pred.item())
-            label.append(dev_label.item())
+            pred.append(y_pred)
+            label.append(dev_label)
 
             # Compute loss
-            loss = criterion(y_pred, dev_label)
-            acc.append(
-                torch.eq(
-                    (torch.sigmoid(y_pred).data > 0.5).float(),
-                    dev_label)
-            )
+            loss = criterion(y_pred.float(), dev_label.float())
+            acc.append(torch.eq((torch.sigmoid(y_pred).data > 0.5).float(),dev_label))
             losses.append(loss.item())
             
         dev_acc = torch.mean(torch.cat(acc).float())
         dev_loss = np.mean(losses)
-        
         dev_pred_out = pred
         dev_label_out = label
-        
-        # test loss
+        current_time = time.clock()
+
         losses, acc = [], []
         label, pred = [], []
         model.eval()
-        for test_data, test_label in test_dataloader:
-            # Squeeze the data [1, 33, 49], [1,5] to [33, 49], [5]
+
+        for test_data, test_label in test_loader:
             test_data = torch.squeeze(test_data)
             test_label = torch.squeeze(test_label)
             
             # Forward pass : Compute predicted y by passing train data to the model
-            y_pred = model(test_data)
+            if model_type == "GRU":
+                h = h.data
+            else:
+                h = tuple([e.data for e in h])
+            y_pred, h = model(test_data.to(device).float(), h)
+            y_pred = torch.squeeze(y_pred)
             
             # Save predict and label
-            pred.append(y_pred.item())
-            label.append(test_label.item())
+            pred.append(y_pred.detach().numpy())
+            label.append(test_label.detach().numpy())
 
             # Compute loss
-            loss = criterion(y_pred, test_label)
+            loss = criterion(y_pred.float(), test_label.float())
             acc.append(
                 torch.eq(
                     (torch.sigmoid(y_pred).data > 0.5).float(),
@@ -160,7 +163,6 @@ def fit(model, criterion, learning_rate,\
             
         test_acc = torch.mean(torch.cat(acc).float())
         test_loss = np.mean(losses)
-        
         test_pred_out = pred
         test_label_out = label
                 
@@ -175,20 +177,29 @@ def fit(model, criterion, learning_rate,\
         label = np.asarray(label)
         
         auc_score = roc_auc_score(label, pred)
-        
-        # print("Epoch: {} Train: {:.4f}/{:.2f}%, Dev: {:.4f}/{:.2f}%, Test: {:.4f}/{:.2f}% AUC: {:.4f}".format(
-        #     epoch, train_loss, train_acc*100, dev_loss, dev_acc*100, test_loss, test_acc*100, auc_score))
         print("Epoch: {} Train loss: {:.4f}, Dev loss: {:.4f}, Test loss: {:.4f}, Test AUC: {:.4f}".format(
             epoch, train_loss, dev_loss, test_loss, auc_score))
-        
-        # save the parameters
-        train_log = []
-        train_log.append(model.state_dict())
-        torch.save(model.state_dict(), './save/grud_mean_grud_para.pt')
-        
-        #print(train_log)
-    
-    return epoch_losses        
+
+    return model
+
+def evaluate(model, test_x, test_y, label_scalers):
+    model.eval()
+    outputs = []
+    targets = []
+    start_time = time.clock()
+    for i in test_x.keys():
+        inp = torch.from_numpy(np.array(test_x[i]))
+        labs = torch.from_numpy(np.array(test_y[i]))
+        h = model.init_hidden(inp.shape[0])
+        out, h = model(inp.to(device).float(), h)
+        outputs.append(label_scalers[i].inverse_transform(out.cpu().detach().numpy()).reshape(-1))
+        targets.append(label_scalers[i].inverse_transform(labs.numpy()).reshape(-1))
+    print("Evaluation Time: {}".format(str(time.clock()-start_time)))
+    sMAPE = 0
+    for i in range(len(outputs)):
+        sMAPE += np.mean(abs(outputs[i]-targets[i])/(targets[i]+outputs[i])/2)/len(outputs)
+    print("sMAPE: {}%".format(sMAPE*100))
+    return outputs, targets, sMAPE  
 
 
 ##data loading 
@@ -201,8 +212,25 @@ features = pd.read_csv(r'MIMIC_IV\resources\features.csv', header = None)
 features = features.loc[:415,1] 
 
 pr = Preprocessing(df_hourly, df_24h, df_48h, df_med, df_demographic, nb_hours, TBI_split, random_state, imputation)
-final_data, labels = pr.preprocess_data()
-print(final_data.mean())
-model = GRU.GRUD(input_size = input_size, hidden_size= hidden_size, output_size=output_size, dropout=0, dropout_type='mloss', x_mean=x_mean, num_layers=num_layers)
+data, labels = pr.time_series_pr()
+final_data = np.array(data)
+final_data = np.transpose(final_data, (0,2,1))
 
 
+
+X_train, X_test, y_train, y_test = train_test_split(final_data, labels, test_size=0.2, shuffle = True, random_state=random_state)
+X_train, X_val, y_train, y_val  = train_test_split(X_train, y_train, test_size=0.25, random_state=random_state)
+
+train_data = TensorDataset(torch.from_numpy(X_train), torch.from_numpy(y_train))
+train_loader = DataLoader(train_data, shuffle=True, batch_size=batch_size, drop_last=True)
+
+dev_data = TensorDataset(torch.from_numpy(X_val), torch.from_numpy(y_val))
+dev_loader = DataLoader(dev_data, shuffle=True, batch_size=batch_size, drop_last=True)
+
+test_data = TensorDataset(torch.from_numpy(X_test), torch.from_numpy(y_test))
+test_loader = DataLoader(test_data, shuffle=True, batch_size=batch_size, drop_last=True)
+
+gru_model = train(train_loader, dev_loader, test_loader, lr, model_type="GRU")
+
+
+gru_outputs, targets, gru_sMAPE = evaluate(gru_model, X_test, y_test, label_scalers)

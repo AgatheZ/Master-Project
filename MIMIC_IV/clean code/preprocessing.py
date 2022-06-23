@@ -311,3 +311,43 @@ class Preprocessing:
             final_data = np.squeeze(final_data)
             final_data = normalize(final_data)
             return final_data, labels
+        
+    def time_series_pr(self):
+        self.df_hourly = self.df_hourly.drop(columns = ['icu_intime'])
+        self.df_24h = self.df_24h.drop(columns = ['icu_intime'])
+        
+        ##label extraction 
+        labels = self.df_demographic.pop('los')
+        labels[labels <= 4] = 0
+        labels[labels > 4] = 1
+        labels = labels.values
+
+        ##pivot the tables 
+        self.df_hourly = self.df_hourly.pivot_table(index = ['stay_id', 'hour_from_intime'], columns = 'feature_name', values = 'feature_mean_value')
+        self.df_24h = self.df_24h.pivot_table(index = ['stay_id', 'hour_from_intime'], columns = 'feature_name', values = 'feature_mean_value')
+
+        ##create batches 
+        self.df_hourly = self.df_hourly.reset_index(level=['stay_id'])
+        self.df_24h = self.df_24h.reset_index(level=['stay_id'])
+
+        batch_hourly = self.create_batchs(self.df_hourly)
+        batch_24h = self.create_batchs(self.df_24h)
+
+        ##reindex for patients that don't have entries at the begginning of their stays + cut to 48h
+        ##aggregation as well
+        data_pr = []
+        for i in range(len(batch_24h)):
+            batch_hourly[i] = batch_hourly[i].reindex(range(1, self.nb_hours + 1), fill_value = None)
+            batch_24h[i] = batch_24h[i].reindex(range(1, self.nb_hours//24 + 1), fill_value = None)
+            batch_24h[i] = batch_24h[i].reindex(range(1, self.nb_hours + 1), fill_value = None)
+            batch_24h[i] = batch_24h[i].fillna(batch_24h[i].mean())
+            batch_hourly[i] = batch_hourly[i].drop(columns = 'stay_id')
+            batch_24h[i] = batch_24h[i].drop(columns = 'stay_id')
+            data_pr.append(pd.concat([batch_hourly[i], batch_24h[i]], axis=1))
+        
+        mean = pd.concat(data_pr).mean()
+        for i in range(len(batch_hourly)):
+                data_pr[i] = data_pr[i].fillna(method = "ffill")
+                data_pr[i] = data_pr[i].fillna(mean)
+    
+        return data_pr, labels

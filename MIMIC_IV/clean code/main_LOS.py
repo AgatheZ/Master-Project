@@ -27,7 +27,7 @@ random_state = 1
 TBI_split = False
 tuning = False
 SHAP = False
-imputation = 'multivariate'
+imputation = 'carry_forward'
 model_name = 'Stacking'
 
 assert model_name in ['RF', 'XGBoost', 'LightGBM', 'Stacking'], "Please specify a valid model name"
@@ -47,8 +47,11 @@ if nb_hours == 24:
 else:
    features = features.loc[:,0]
 
+
 #Preprocessing
 pr = Preprocessing(df_hourly, df_24h, df_48h, df_med, df_demographic, nb_hours, TBI_split, random_state, imputation)
+pr.time_series_pr()
+
 if TBI_split:
    final_data_mild, final_data_severe, labels_mild, labels_severe = pr.preprocess_data()
 else:
