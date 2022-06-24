@@ -1,3 +1,4 @@
+from unicodedata import bidirectional
 import torch.nn as nn
 import torch
 import warnings 
@@ -19,7 +20,7 @@ class GRUNet(nn.Module):
         self.hidden_dim = hidden_dim
         self.n_layers = n_layers
         
-        self.gru = nn.GRU(input_dim, hidden_dim, n_layers, batch_first=True, dropout=drop_prob)
+        self.gru = nn.GRU(input_dim, hidden_dim, n_layers, batch_first=True, dropout=drop_prob, bidirectional =False)
         self.fc = nn.Linear(hidden_dim, output_dim)
         self.relu = nn.ReLU()
         self.sig = nn.Sigmoid()

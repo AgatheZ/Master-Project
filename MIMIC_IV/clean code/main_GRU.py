@@ -23,10 +23,10 @@ tuning = False
 SHAP = False
 imputation = 'carry_forward'
 model_name = 'Stacking'
-lr = 0.001
+lr = 0.0001
 learning_rate_decay = 7 
 n_epochs = 14
-batch_size = 32
+batch_size = 16
 
 is_cuda = torch.cuda.is_available()
 
@@ -35,14 +35,14 @@ if is_cuda:
     device = torch.device("cuda")
 else:
     device = torch.device("cpu")
-    
+print('Device', device)  
 def train(train_loader, dev_loader, test_loader, learn_rate, hidden_dim=24, EPOCHS=5, model_type="GRU"):
     
     # Setting common hyperparameters
     input_dim = next(iter(train_loader))[0].shape[2]
     hidden_dim = 24
     output_dim = 1
-    n_layers = 20
+    n_layers = 49
     # Instantiating the models
     if model_type == "GRU":
         model = GRU.GRUNet(input_dim, hidden_dim, output_dim, n_layers)
@@ -78,7 +78,6 @@ def train(train_loader, dev_loader, test_loader, learn_rate, hidden_dim=24, EPOC
             
             y_pred, h = model(x.to(device).float(), h)
             y_pred = torch.squeeze(y_pred)
-            print(y_pred)
             y_pred_col.append(y_pred)
 
             pred.append(y_pred > 0.5)
@@ -230,7 +229,5 @@ dev_loader = DataLoader(dev_data, shuffle=True, batch_size=batch_size, drop_last
 test_data = TensorDataset(torch.from_numpy(X_test), torch.from_numpy(y_test))
 test_loader = DataLoader(test_data, shuffle=True, batch_size=batch_size, drop_last=True)
 
-gru_model = train(train_loader, dev_loader, test_loader, lr, model_type="GRU")
+gru_model = train(train_loader, dev_loader, test_loader, lr, model_type="GRU", EPOCHS = n_epochs)
 
-
-gru_outputs, targets, gru_sMAPE = evaluate(gru_model, X_test, y_test, label_scalers)
