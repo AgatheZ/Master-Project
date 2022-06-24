@@ -36,11 +36,11 @@ if is_cuda:
 else:
     device = torch.device("cpu")
 print('Device', device)  
-def train(train_loader, dev_loader, test_loader, learn_rate, hidden_dim=24, EPOCHS=5, model_type="GRU"):
+def train(train_loader, dev_loader, test_loader, learn_rate, hidden_dim=512, EPOCHS=5, model_type="GRU"):
     
     # Setting common hyperparameters
     input_dim = next(iter(train_loader))[0].shape[2]
-    hidden_dim = 24
+    hidden_dim = 256
     output_dim = 1
     n_layers = 49
     # Instantiating the models
