@@ -23,9 +23,9 @@ tuning = False
 SHAP = False
 imputation = 'carry_forward'
 model_name = 'Stacking'
-lr = 0.0001
+lr = 0.001
 learning_rate_decay = 7 
-n_epochs = 14
+n_epochs = 50
 batch_size = 16
 
 is_cuda = torch.cuda.is_available()
@@ -40,7 +40,7 @@ def train(train_loader, dev_loader, test_loader, learn_rate, hidden_dim=512, EPO
     
     # Setting common hyperparameters
     input_dim = next(iter(train_loader))[0].shape[2]
-    hidden_dim = 256
+    hidden_dim = 128
     output_dim = 1
     n_layers = 49
     # Instantiating the models

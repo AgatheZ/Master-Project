@@ -6,11 +6,12 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import roc_auc_score
 from sklearn.metrics import roc_curve
 from sklearn.datasets import make_classification
-from sklearn.metrics import plot_confusion_matrix
+from sklearn.metrics import plot_confusion_matrix, mean_absolute_error,  mean_squared_error
 import statistics
 import numpy as np
 import pandas as pd
 import shap
+import math 
 
 
 
@@ -85,7 +86,6 @@ class Evaluation:
             print('Accuracy:', accuracy)
             print('f1:', f1)
 
-
             accs.append(accuracy)
             f1s.append(f1)
             rocs.append(auroc)
@@ -103,7 +103,32 @@ class Evaluation:
         print('Averaged f1-Score (5-folds): %.3f ±  %.3f' % (np.mean(f1s), statistics.stdev(f1s)))
         print('Averaged AUROC (5-folds): %.3f ±  %.3f' % (np.mean(rocs), statistics.stdev(rocs)))
 
-        
         plt.figure()
         self.ROC_plot(rocs, fprs, tprs)
 
+    def evaluate_regression(self):
+        rmse = []
+        mae = []
+        shaps_values = list()
+        test_idx = list()
+        mean_fpr = np.linspace(0, 1, 50)
+        skf = KFold(n_splits=5, random_state= self.random_state, shuffle=True)
+        for train_index, test_index in skf.split(self.X, self.y):
+            X_train, X_test = self.X[train_index], self.X[test_index]
+            y_train, y_test = self.y[train_index], self.y[test_index]
+            xgbc = self.model
+            xgbc.fit(X_train, y_train)
+            y_pred = xgbc.predict(X_test)
+            mse = mean_squared_error(y_test, y_pred)
+            mean_abs = mean_absolute_error(y_test, y_pred)
+            rmse.append(math.sqrt(mse))
+            mae.append(mean_abs)
+            
+            if self.SHAP:
+                ex = shap.Explainer(xgbc.predict)
+                shaps_values = ex.shap_values(X_test)
+                shap.plots.beeswarm(shaps_values, pd.DataFrame(X_test, columns = self.feature_names))
+                self.SHAP = False
+
+        print('Averaged RMSE (5-folds): %.3f ±  %.3f' % (np.mean(rmse), statistics.stdev(rmse)))
+        print('Averaged MAE (5-folds): %.3f ±  %.3f' % (np.mean(mae), statistics.stdev(mae)))

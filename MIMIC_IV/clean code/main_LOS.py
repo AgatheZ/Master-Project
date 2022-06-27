@@ -1,11 +1,7 @@
 import numpy as np
-import random
 import pandas as pd
-from hyperopt import fmin, tpe, hp, anneal, Trials
 import warnings
 from scipy.stats import uniform
-import pickle
-from sklearn import preprocessing
 from mlxtend.classifier import StackingCVClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.naive_bayes import GaussianNB 
