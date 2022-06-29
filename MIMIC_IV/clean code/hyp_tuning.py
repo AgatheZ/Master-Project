@@ -36,17 +36,17 @@ class HypTuning:
                         }
         if self.model_name == 'RF':
             self.space = { 
-                'n_estimators': hp.choice('n_estimators', [200, 500]),
-                'max_features': hp.choice('max_features', ['auto', 'sqrt', 'log2']),
-                'max_depth' : hp.quniform('max_depth', 4, 10, 1),
-                'criterion' : hp.choice('criterion', ['gini', 'entropy'])
+                'n_estimators': hp.quniform('n_estimators', 100, 300, 1),
+                'max_features': hp.choice('max_features', ['auto']),
+                'max_depth' : hp.quniform('max_depth', 4, 20, 1),
+                'criterion' : hp.choice('criterion', ["squared_error"])
             }
 
         if self.model_name == 'LightGBM':
             self.space = {
         'max_depth': (hp.quniform("max_depth", 3, 18, 1)),
-        'boosting_type': hp.choice('boosting_type',
-                                   ['gbdt','dart','goss']),
+        'boosting_type': 
+                                   'gbdt',
         'num_leaves': hp.quniform('num_leaves', 30, 50, 1),
         'learning_rate': hp.loguniform('learning_rate', np.log(0.001), np.log(0.2)),
         'reg_alpha': hp.uniform('reg_alpha', 0,3),
@@ -69,7 +69,7 @@ class HypTuning:
                     eval_set=evaluation, eval_metric="rmse", verbose=False)
             
             if self.model_name == 'RF':
-                clf = RandomForestRegressor(random_state = self.random_state, n_estimators = space['n_estimators'], 
+                clf = RandomForestRegressor(random_state = self.random_state, n_estimators = int(space['n_estimators']), 
                 max_features = space['max_features'], max_depth = int(space['max_depth']), criterion = space['criterion'])
             
                 evaluation = [(self.X_train, self.y_train), (self.X_val, self.y_val)]

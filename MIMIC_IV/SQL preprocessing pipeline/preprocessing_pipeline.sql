@@ -9,7 +9,7 @@ JOIN mimic_hosp.d_icd_diagnoses d
 ON v.icd_code = d.icd_code
 JOIN mimic_icu.icustays icu 
 ON v.subject_id = icu.subject_id
-WHERE (icu.los >= 2) AND ((d.icd_code LIKE '850%') OR (d.icd_code LIKE '851%') OR (d.icd_code LIKE '852%') OR (d.icd_code LIKE '853%') OR (d.icd_code LIKE '854%'))
+WHERE (icu.los >= 2) AND ((d.icd_code LIKE '850%') OR (d.icd_code LIKE '851%') OR (d.icd_code LIKE '852%') OR (d.icd_code LIKE '853%') OR (d.icd_code LIKE '854%') OR (d.icd_code LIKE '959.01%'))
 ); -- Only take patients with records > 48h
 
 
@@ -319,7 +319,7 @@ DROP TABLE IF EXISTS mimiciv.final_h;
 CREATE TABLE mimiciv.final_h
 AS
 
-SELECT s.* from mimiciv.aggregated_vitals_hourly t
+SELECT t.* from mimiciv.aggregated_vitals_hourly t
 JOIN mimiciv.final_stays s 
 ON s.stay_id = t.stay_id;
 
@@ -328,7 +328,7 @@ DROP TABLE IF EXISTS mimiciv.final_24;
 CREATE TABLE mimiciv.final_24
 AS
 
-SELECT s.* from mimiciv.aggregated_vitals_24h t
+SELECT t.* from mimiciv.aggregated_vitals_24h t
 JOIN mimiciv.final_stays s 
 ON s.stay_id = t.stay_id;
 
@@ -337,7 +337,7 @@ DROP TABLE IF EXISTS mimiciv.final_48;
 CREATE TABLE mimiciv.final_48
 AS
 
-SELECT s.* from mimiciv.aggregated_vitals_48h t
+SELECT t.* from mimiciv.aggregated_vitals_48h t
 JOIN mimiciv.final_stays s 
 ON s.stay_id = t.stay_id;
 
@@ -346,7 +346,7 @@ DROP TABLE IF EXISTS mimiciv.final_med;
 CREATE TABLE mimiciv.final_med
 AS
 
-SELECT s.* from mimiciv.cohort_med t
+SELECT t.* from mimiciv.cohort_med t
 JOIN mimiciv.final_stays s 
 ON s.stay_id = t.stay_id;
 
@@ -355,7 +355,7 @@ DROP TABLE IF EXISTS mimiciv.final_dem;
 CREATE TABLE mimiciv.final_dem
 AS
 
-SELECT s.* from mimiciv.demographics t
+SELECT t.* from mimiciv.demographics t
 JOIN mimiciv.final_stays s 
 ON s.stay_id = t.stay_id;
 
