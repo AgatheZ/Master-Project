@@ -132,7 +132,9 @@ class Preprocessing:
                 batch_hourly[i] = batch_hourly[i].fillna(hourly_mean)
                 batch_demographic[i].bmi = batch_demographic[i].bmi.fillna(bmi_mean)
                 batch_demographic[i].gcs = batch_demographic[i].gcs.fillna(gcs_mean)
-            print (pd.concat(batch_hourly))
+            return batch_hourly, batch_24h, batch_48h, batch_med, batch_demographic
+        
+        if type == 'No':
             return batch_hourly, batch_24h, batch_48h, batch_med, batch_demographic
 
     def preprocess_data(self):
@@ -274,6 +276,7 @@ class Preprocessing:
             batch_hourly_severe, batch_24h_severe, batch_48h_severe, batch_med_severe, batch_demographic_severe = self.data_imputation(batch_hourly_severe, batch_24h_severe, batch_48h_severe, batch_med_severe, batch_demographic_severe, self.imputation, self.random_state)
                 
         else:
+            print()
             batch_hourly, batch_24h, batch_48h, batch_med, batch_demographic = self.data_imputation(batch_hourly, batch_24h, batch_48h, batch_med, batch_demographic, self.imputation, self.random_state)
         
 
@@ -289,7 +292,7 @@ class Preprocessing:
 
         else:
             if self.nb_hours == 24:
-                final_data = np.array([[np.concatenate([np.concatenate(batch_demographic[i].values), np.concatenate(batch_hourly[i].values), np.concatenate(batch_24h[i].values), np.concatenate(batch_med[i].values)])] for i in range(len(batch_hourly))])
+                final_data = np.array([[np.concatenate([np.concatenate(batch_demographic[i].values), np.concatenate(batch_hourly[i].values), np.concatenate(batch_24h[i].values),  np.concatenate(batch_med[i].values)])] for i in range(len(batch_hourly))])
             else: 
                 final_data = np.array([[np.concatenate([np.concatenate(batch_demographic[i].values), np.concatenate(batch_hourly[i].values), np.concatenate(batch_24h[i].values), np.concatenate(batch_48h[i].values), np.concatenate(batch_med[i].values)])] for i in range(len(batch_hourly))])
 
@@ -301,47 +304,57 @@ class Preprocessing:
 
         if self.TBI_split:
             final_data_mild = np.squeeze(final_data_mild)
-            final_data_mild = normalize(final_data_mild)
+            if self.imputation != 'No':
+                final_data_mild = normalize(final_data_mild)
             final_data_severe = np.squeeze(final_data_severe)
-            final_data_severe = normalize(final_data_severe)
+            if self.imputation != 'No':
+                final_data_severe = normalize(final_data_severe)
             return final_data_mild, final_data_severe, labels_mild, labels_severe
         else:
             final_data = np.squeeze(final_data)
-            final_data = normalize(final_data)
+            if self.imputation != 'No':
+                final_data = normalize(final_data)
             return final_data, labels
         
-    def time_series_pr(self):
+    def time_series_pr(self, label):
         self.df_hourly = self.df_hourly.drop(columns = ['icu_intime'])
         self.df_24h = self.df_24h.drop(columns = ['icu_intime'])
-        
-        ##label extraction 
-        labels = self.df_demographic.pop('los')
-        labels[labels <= 4] = 0
-        labels[labels > 4] = 1
-        labels = labels.values
 
         ##pivot the tables 
         self.df_hourly = self.df_hourly.pivot_table(index = ['stay_id', 'hour_from_intime'], columns = 'feature_name', values = 'feature_mean_value')
         self.df_24h = self.df_24h.pivot_table(index = ['stay_id', 'hour_from_intime'], columns = 'feature_name', values = 'feature_mean_value')
 
-        ##create batches 
-        self.df_hourly = self.df_hourly.reset_index(level=['stay_id'])
-        self.df_24h = self.df_24h.reset_index(level=['stay_id'])
+        ##label extraction 
+        self.df_hourly_copy = self.df_hourly.reset_index(level=['hour_from_intime'])
+        labels = self.df_hourly_copy[self.df_hourly_copy.hour_from_intime == 25][label]
+        labels = labels.dropna()
+        task2_cohort = labels.index.values
+        labels = labels.values
 
+        ##Restriction of the cohort 
+        self.df_hourly = self.df_hourly.reset_index(level=['stay_id'])
+        self.df_hourly = self.df_hourly[self.df_hourly['stay_id'].isin(task2_cohort)]
+        self.df_demographic = self.df_demographic[self.df_demographic['stay_id'].isin(task2_cohort)]
+
+        self.df_demographic.gender[self.df_demographic.gender == 'F'] = 1
+        self.df_demographic.gender[self.df_demographic.gender == 'M'] = 0
+
+        ##create batches 
         batch_hourly = self.create_batchs(self.df_hourly)
-        batch_24h = self.create_batchs(self.df_24h)
+        batch_demographic = self.create_batchs(self.df_demographic)
 
         ##reindex for patients that don't have entries at the begginning of their stays + cut to 48h
         ##aggregation as well
         data_pr = []
-        for i in range(len(batch_24h)):
+        for i in range(len(batch_demographic)):
             batch_hourly[i] = batch_hourly[i].reindex(range(1, self.nb_hours + 1), fill_value = None)
-            batch_24h[i] = batch_24h[i].reindex(range(1, self.nb_hours//24 + 1), fill_value = None)
-            batch_24h[i] = batch_24h[i].reindex(range(1, self.nb_hours + 1), fill_value = None)
-            batch_24h[i] = batch_24h[i].fillna(batch_24h[i].mean())
+            
+            batch_demographic[i] = batch_demographic[i].reindex(range(1, self.nb_hours + 1), fill_value = None)
+
+            batch_demographic[i] = batch_demographic[i].fillna(batch_demographic[i].mean())
             batch_hourly[i] = batch_hourly[i].drop(columns = 'stay_id')
-            batch_24h[i] = batch_24h[i].drop(columns = 'stay_id')
-            data_pr.append(pd.concat([batch_hourly[i], batch_24h[i]], axis=1))
+            batch_demographic[i] = batch_demographic[i].drop(columns = 'stay_id')
+            data_pr.append(pd.concat([batch_hourly[i], batch_demographic[i]], axis=1))
         
         mean = pd.concat(data_pr).mean()
         for i in range(len(batch_hourly)):
@@ -421,13 +434,15 @@ class Preprocessing:
         
         #feature concatenation 
         stratify_param = self.df_demographic.gcs
-        final_data = np.array([[np.concatenate([np.concatenate(batch_demographic[i].values), np.concatenate(batch_hourly[i].values), np.concatenate(batch_24h[i].values), np.concatenate(batch_med[i].values)])] for i in range(len(batch_hourly))])
+        final_data = np.array([[np.concatenate([np.concatenate(batch_demographic[i].values), np.concatenate(batch_hourly[i].values)])] for i in range(len(batch_hourly))])
 
         # df_24h.to_csv('df_24h.csv')
         # df_48h.to_csv('df_48h.csv')
         # df_med.to_csv('df_med.csv')
         # df_demographic.to_csv('df_demographic.csv')
-
         final_data = np.squeeze(final_data)
-        final_data = normalize(final_data)
+        if self.imputation != 'No':
+            final_data = normalize(final_data)
+        
+        
         return final_data, labels

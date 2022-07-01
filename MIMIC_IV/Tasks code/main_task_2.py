@@ -25,11 +25,11 @@ TBI_split = False
 tuning = False
 SHAP = False
 imputation = 'carry_forward'
-model_name = 'Stacking'
+model_name = 'XGBoost'
 task = 'ABPm'
 
 assert model_name in ['RF', 'XGBoost', 'LightGBM', 'Stacking'], "Please specify a valid model name"
-assert imputation in ['carry_forward', 'linear', 'multivariate'], "Please specify a valid imputation method"
+assert imputation in ['No','carry_forward', 'linear', 'multivariate'], "Please specify a valid imputation method"
 assert task in ['ABPm', 'ABPs', 'ABPd'], "Please specify a valid vital sign"
 
 ##data loading 

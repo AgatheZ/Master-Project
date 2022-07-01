@@ -14,6 +14,9 @@ from preprocessing import Preprocessing
 from hyp_tuning import HypTuning
 from sklearn.ensemble import RandomForestClassifier
 import lightgbm as lgb
+from sklearn.decomposition import PCA
+import matplotlib.pyplot as plt 
+import seaborn as sns
 
 warnings.filterwarnings("ignore")
 
@@ -23,11 +26,11 @@ random_state = 1
 TBI_split = False
 tuning = False
 SHAP = False
-imputation = 'carry_forward'
-model_name = 'Stacking'
+imputation = 'No'
+model_name = 'LightGBM'
 
 assert model_name in ['RF', 'XGBoost', 'LightGBM', 'Stacking'], "Please specify a valid model name"
-assert imputation in ['carry_forward', 'linear', 'multivariate'], "Please specify a valid imputation method"
+assert imputation in ['No', 'carry_forward', 'linear', 'multivariate'], "Please specify a valid imputation method"
 
 ##data loading 
 df_hourly = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_hour.csv', delimiter=',')
@@ -36,6 +39,7 @@ df_48h = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\preproce
 df_med = pd.read_csv(r"C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_med.csv", delimiter=',')
 df_demographic = pd.read_csv(r"C:\Users\USER\OneDrive\Summer_project\Azure\data\demographics_mimic4.csv", delimiter=',')
 features = pd.read_csv(r'MIMIC_IV\resources\features.csv', header = None)
+
 print('Data Loading - done')
 
 if nb_hours == 24:
@@ -46,13 +50,15 @@ else:
 
 #Preprocessing
 pr = Preprocessing(df_hourly, df_24h, df_48h, df_med, df_demographic, nb_hours, TBI_split, random_state, imputation)
-pr.time_series_pr()
 
 if TBI_split:
    final_data_mild, final_data_severe, labels_mild, labels_severe = pr.preprocess_data()
 else:
    final_data, labels = pr.preprocess_data()
 print('Data Preprocessing - done')
+
+#PCA and T-SNE for feature visualisation 
+
 
 
 #XGBOOST MODEL 
@@ -66,7 +72,7 @@ else:
 # #hyperparameter tuning 
 
 if tuning:
-   xgboost_hyp_tuning = HypTuning(5, model_name, X_train, y_train, X_val, y_val, n_iter = 1000, random_state = random_state)
+   xgboost_hyp_tuning = HypTuning(False, 5, model_name, X_train, y_train, X_val, y_val, n_iter = 1000, random_state = random_state)
    best_param = xgboost_hyp_tuning.hyperopt()
 
 # final models evaluation using 5-fold cross validation  
@@ -96,7 +102,8 @@ if model_name == 'RF':
    model = RandomForestClassifier(max_depth=best_param['max_depth'], random_state=random_state, n_estimators = best_param['n_estimators'], max_features = best_param['max_features'])
 
 if model_name == 'LightGBM':
-   best_param = {'boosting_type': 'gbdt', 'colsample_by_tree': 0.9203696945188418, 'learning_rate': 0.04047240211150923, 'max_depth': 14.0, 'min_child_weight': 4.735811783605331, 'num_leaves': 32.0, 'reg_alpha': 0.33592465595298626, 'reg_lambda': 0.21263015922040293}
+   #best_param = {'boosting_type': 'gbdt', 'colsample_by_tree': 0.9203696945188418, 'learning_rate': 0.04047240211150923, 'max_depth': 14.0, 'min_child_weight': 4.735811783605331, 'num_leaves': 32.0, 'reg_alpha': 0.33592465595298626, 'reg_lambda': 0.21263015922040293}
+   best_param = {'boosting_type': 'gbdt', 'colsample_by_tree': 0.6473253528686873, 'learning_rate': 0.05933494691614115, 'max_depth': 4.0, 'min_child_weight': 4.648109212654841, 'num_leaves': 31.0, 'reg_alpha': 0.08306786314229996, 'reg_lambda': 0.4150980688456025}
    model = lgb.LGBMClassifier(boosting_type=best_param['boosting_type'], num_leaves=int(best_param['num_leaves']), 
             max_depth= int(best_param['max_depth']), learning_rate=best_param['learning_rate'], reg_alpha=best_param['reg_alpha'], 
             reg_lambda = best_param['reg_lambda'], colsample_bytree= best_param['colsample_by_tree'], min_child_weight = best_param['min_child_weight'])
@@ -104,13 +111,7 @@ if model_name == 'LightGBM':
 if model_name == 'Stacking':
    best_param = {'alpha': 3.0, 'colsample_bytree': 0.5359922767597586, 'eta': 0.14476892774894637, 'gamma': 2.3216870446364952, 'max_depth': 18.0, 'min_child_weight': 1.0}
    depth = best_param['max_depth']
-   xgb = XGBClassifier(random_state = random_state, 
-                        max_depth = int(depth), 
-                        gamma = best_param['gamma'],
-                        eta = best_param['eta'],
-                        alpha = (best_param['alpha']),
-                        min_child_weight=(best_param['min_child_weight']),
-                        colsample_bytree=best_param['colsample_bytree'])
+   xgb = XGBClassifier()
 
    best_param = {'boosting_type': 'gbdt', 'colsample_by_tree': 0.9203696945188418, 'learning_rate': 0.04047240211150923, 'max_depth': 14.0, 'min_child_weight': 4.735811783605331, 'num_leaves': 32.0, 'reg_alpha': 0.33592465595298626, 'reg_lambda': 0.21263015922040293}
    lgbm = lgb.LGBMClassifier()
@@ -118,7 +119,7 @@ if model_name == 'Stacking':
    rf = RandomForestClassifier()
    clf1 = KNeighborsClassifier()
    clf2 = GaussianNB()
-   model = StackingCVClassifier(classifiers = (lgbm, rf, clf1, clf2), meta_classifier=lgbm)
+   model = StackingCVClassifier(classifiers = (lgbm, rf, clf1, clf2), meta_classifier=xgb)
 
 #fits and evaluates the model
 eval = Evaluation(model, 'Tuned ' + model_name, final_data, labels, random_state, SHAP, features, nb_hours)

@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_auc_score, mean_absolute_error
 import GRU
 import pandas as pd 
 import torch.nn as nn
@@ -9,6 +9,7 @@ from torch.utils.data import TensorDataset, DataLoader
 import warnings
 import torch.utils.data as utils
 import time
+import matplotlib.pyplot as plt
 from sklearn.model_selection import (KFold, StratifiedKFold, cross_val_predict,
                                      cross_validate, train_test_split)
 warnings.filterwarnings("ignore")
@@ -25,9 +26,9 @@ imputation = 'carry_forward'
 model_name = 'Stacking'
 lr = 0.001
 learning_rate_decay = 7 
-n_epochs = 50
+n_epochs = 10
 batch_size = 16
-
+task = 'ABPd'
 is_cuda = torch.cuda.is_available()
 
 # If we have a GPU available, we'll set our device to GPU. We'll use this device variable later in our code.
@@ -40,7 +41,7 @@ def train(train_loader, dev_loader, test_loader, learn_rate, hidden_dim=512, EPO
     
     # Setting common hyperparameters
     input_dim = next(iter(train_loader))[0].shape[2]
-    hidden_dim = 128
+    hidden_dim = 512
     output_dim = 1
     n_layers = 49
     # Instantiating the models
@@ -51,18 +52,20 @@ def train(train_loader, dev_loader, test_loader, learn_rate, hidden_dim=512, EPO
     model.to(device)
     
     # Defining loss function and optimizer
-    criterion = nn.BCELoss()
+    criterion = nn.MSELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learn_rate)
     model.train()
     print("Starting Training of {} model".format(model_type))
     epoch_times = []
+    ep_train_loss =[]
+    ep_dev_loss = []
     # Start training loop
     for epoch in range(1,EPOCHS+1):
         start_time = time.clock()
         h = model.init_hidden(batch_size)
         avg_loss = 0.
         counter = 0
-        losses, acc = [], []
+        losses, mae = [], []
         label, pred = [], []
         epoch_losses = []
         y_pred_col = []
@@ -80,13 +83,13 @@ def train(train_loader, dev_loader, test_loader, learn_rate, hidden_dim=512, EPO
             y_pred = torch.squeeze(y_pred)
             y_pred_col.append(y_pred)
 
-            pred.append(y_pred > 0.5)
+            pred.append(y_pred)
             label.append(train_label)
             loss = criterion(y_pred.float(), train_label.float())
-            acc.append(
-                torch.eq(
-                    (torch.sigmoid(y_pred).data > 0.5).float(),
-                    train_label)
+            m = nn.L1Loss()
+            mae.append(
+                
+                    (m(y_pred.float(), train_label.float())).item()
             )
             losses.append(loss.item())
 
@@ -98,14 +101,14 @@ def train(train_loader, dev_loader, test_loader, learn_rate, hidden_dim=512, EPO
             if counter%200 == 0:
                 print("Epoch {}......Step: {}/{}....... Average Loss for Epoch: {}".format(epoch, counter, len(train_loader), avg_loss/counter))
         
-        train_acc = torch.mean(torch.cat(acc).float())
+        train_mae = np.mean((mae))
         train_loss = np.mean(losses)
         train_pred_out = pred
         train_label_out = label
         model.eval()
         
         #validation set 
-        losses, acc = [], []
+        losses, mae = [], []
         label, pred = [], []
         for dev_data, dev_label in dev_loader:
             # Forward pass : Compute predicted y by passing train data to the model
@@ -122,16 +125,17 @@ def train(train_loader, dev_loader, test_loader, learn_rate, hidden_dim=512, EPO
 
             # Compute loss
             loss = criterion(y_pred.float(), dev_label.float())
-            acc.append(torch.eq((torch.sigmoid(y_pred).data > 0.5).float(),dev_label))
+            m = nn.L1Loss()
+            mae.append(m(y_pred.float(), dev_label.float()).item())
             losses.append(loss.item())
             
-        dev_acc = torch.mean(torch.cat(acc).float())
+        dev_mae = np.mean((mae))
         dev_loss = np.mean(losses)
         dev_pred_out = pred
         dev_label_out = label
         current_time = time.clock()
 
-        losses, acc = [], []
+        losses, mae = [], []
         label, pred = [], []
         model.eval()
 
@@ -153,21 +157,20 @@ def train(train_loader, dev_loader, test_loader, learn_rate, hidden_dim=512, EPO
 
             # Compute loss
             loss = criterion(y_pred.float(), test_label.float())
-            acc.append(
-                torch.eq(
-                    (torch.sigmoid(y_pred).data > 0.5).float(),
-                    test_label)
+            m = nn.L1Loss()
+            mae.append(
+                m(y_pred.float(), test_label.float()).item()
             )
             losses.append(loss.item())
             
-        test_acc = torch.mean(torch.cat(acc).float())
+        test_mae = np.mean((mae))
         test_loss = np.mean(losses)
         test_pred_out = pred
         test_label_out = label
                 
         epoch_losses.append([
              train_loss, dev_loss, test_loss,
-             train_acc, dev_acc, test_acc,
+             train_mae, dev_mae, test_mae,
              train_pred_out, dev_pred_out, test_pred_out,
              train_label_out, dev_label_out, test_label_out,
          ])
@@ -175,9 +178,18 @@ def train(train_loader, dev_loader, test_loader, learn_rate, hidden_dim=512, EPO
         pred = np.asarray(pred)
         label = np.asarray(label)
         
-        auc_score = roc_auc_score(label, pred)
-        print("Epoch: {} Train loss: {:.4f}, Dev loss: {:.4f}, Test loss: {:.4f}, Test AUC: {:.4f}".format(
+        auc_score = mean_absolute_error(label, pred)
+        print("Epoch: {} Train loss: {:.4f}, Dev loss: {:.4f}, Test loss: {:.4f}, Test MAE: {:.4f}".format(
             epoch, train_loss, dev_loss, test_loss, auc_score))
+        ep_dev_loss.append(dev_loss)
+        ep_train_loss.append(train_loss)
+    plt.plot(range(epoch), ep_train_loss)
+    plt.plot(range(epoch), ep_dev_loss)
+    plt.title('Learning curve - ABPd')
+    plt.xlabel('Epoch')
+    plt.xlabel('MSE')
+    plt.legend(['Training Loss', 'Validation Loss'])
+    plt.show()
 
     return model
 
@@ -207,11 +219,11 @@ df_24h = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\preproce
 df_48h = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_48hour.csv', delimiter=',')
 df_med = pd.read_csv(r"C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_med.csv", delimiter=',')
 df_demographic = pd.read_csv(r"C:\Users\USER\OneDrive\Summer_project\Azure\data\demographics_mimic4.csv", delimiter=',')
-features = pd.read_csv(r'MIMIC_IV\resources\features.csv', header = None)
-features = features.loc[:415,1] 
+features = pd.read_csv(r'MIMIC_IV\resources\features_reg.csv', header = None)
+features = features.loc[:416,1] 
 
 pr = Preprocessing(df_hourly, df_24h, df_48h, df_med, df_demographic, nb_hours, TBI_split, random_state, imputation)
-data, labels = pr.time_series_pr()
+data, labels = pr.time_series_pr(task)
 final_data = np.array(data)
 final_data = np.transpose(final_data, (0,2,1))
 

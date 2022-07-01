@@ -28,7 +28,7 @@ class GRUNet(nn.Module):
     def forward(self, x, h):
         out, h = self.gru(x, h)
         out = self.fc(self.relu(out[:,-1]))
-        out = self.sig(out)
+        out = out
         return out, h
     
     def init_hidden(self, batch_size):
