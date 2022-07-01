@@ -26,9 +26,9 @@ imputation = 'carry_forward'
 model_name = 'Stacking'
 lr = 0.001
 learning_rate_decay = 7 
-n_epochs = 30
+n_epochs = 35
 batch_size = 16
-task = 'ABPd'
+task = 'ABPm'
 is_cuda = torch.cuda.is_available()
 
 # If we have a GPU available, we'll set our device to GPU. We'll use this device variable later in our code.
@@ -230,12 +230,12 @@ final_data = np.transpose(final_data, (0,2,1))
 
 
 X_train, X_test, y_train, y_test = train_test_split(final_data, labels, test_size=0.2, shuffle = True, random_state=random_state)
-# X_train, X_val, y_train, y_val  = train_test_split(X_train, y_train, test_size=0.25, random_state=random_state)
+X_train, X_val, y_train, y_val  = train_test_split(X_train, y_train, test_size=0.25, random_state=random_state)
 
 train_data = TensorDataset(torch.from_numpy(X_train), torch.from_numpy(y_train))
 train_loader = DataLoader(train_data, shuffle=True, batch_size=batch_size, drop_last=True)
 
-dev_data = TensorDataset(torch.from_numpy(X_test), torch.from_numpy(y_test))
+dev_data = TensorDataset(torch.from_numpy(X_val), torch.from_numpy(y_val))
 dev_loader = DataLoader(dev_data, shuffle=True, batch_size=batch_size, drop_last=True)
 
 test_data = TensorDataset(torch.from_numpy(X_test), torch.from_numpy(y_test))
