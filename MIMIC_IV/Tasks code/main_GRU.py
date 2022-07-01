@@ -26,7 +26,7 @@ imputation = 'carry_forward'
 model_name = 'Stacking'
 lr = 0.001
 learning_rate_decay = 7 
-n_epochs = 10
+n_epochs = 30
 batch_size = 16
 task = 'ABPd'
 is_cuda = torch.cuda.is_available()
@@ -187,7 +187,7 @@ def train(train_loader, dev_loader, test_loader, learn_rate, hidden_dim=512, EPO
     plt.plot(range(epoch), ep_dev_loss)
     plt.title('Learning curve - ABPd')
     plt.xlabel('Epoch')
-    plt.xlabel('MSE')
+    plt.ylabel('MSE')
     plt.legend(['Training Loss', 'Validation Loss'])
     plt.show()
 
@@ -230,12 +230,12 @@ final_data = np.transpose(final_data, (0,2,1))
 
 
 X_train, X_test, y_train, y_test = train_test_split(final_data, labels, test_size=0.2, shuffle = True, random_state=random_state)
-X_train, X_val, y_train, y_val  = train_test_split(X_train, y_train, test_size=0.25, random_state=random_state)
+# X_train, X_val, y_train, y_val  = train_test_split(X_train, y_train, test_size=0.25, random_state=random_state)
 
 train_data = TensorDataset(torch.from_numpy(X_train), torch.from_numpy(y_train))
 train_loader = DataLoader(train_data, shuffle=True, batch_size=batch_size, drop_last=True)
 
-dev_data = TensorDataset(torch.from_numpy(X_val), torch.from_numpy(y_val))
+dev_data = TensorDataset(torch.from_numpy(X_test), torch.from_numpy(y_test))
 dev_loader = DataLoader(dev_data, shuffle=True, batch_size=batch_size, drop_last=True)
 
 test_data = TensorDataset(torch.from_numpy(X_test), torch.from_numpy(y_test))
