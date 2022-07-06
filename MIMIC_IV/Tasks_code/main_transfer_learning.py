@@ -185,7 +185,7 @@ def train(train_loader, dev_loader, test_loader, learn_rate, save = True, task =
     plt.legend(['Training Loss', 'Validation Loss'])
     plt.savefig(r"C:\Users\USER\OneDrive\Summer_project\Pics - Copy\LC_{}_{}_{}_{}_{}".format(task, severe, hidden_dim, n_layers, EPOCHS))
     if save:
-      model_path = r'C:\Users\USER\OneDrive\Summer_project\Azure\Master-Project\MIMIC_IV\models\GRU_{}_{}_{}_{}_{}'.format(task, severe, hidden_dim, n_layers, EPOCHS)
+      model_path = r'C:\Users\USER\OneDrive\Summer_project\Azure\models\GRU_{}_{}_{}_{}_{}'.format(task, severe, hidden_dim, n_layers, EPOCHS)
       torch.save(model, model_path)
     return model
 
