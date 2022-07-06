@@ -26,7 +26,7 @@ imputation = 'carry_forward'
 model_name = 'Stacking'
 lr = 0.001
 learning_rate_decay = 7 
-n_epochs = 35
+n_epochs = 50
 batch_size = 16
 task = 'ABPm'
 is_cuda = torch.cuda.is_available()
@@ -185,7 +185,7 @@ def train(train_loader, dev_loader, test_loader, learn_rate, hidden_dim=512, EPO
         ep_train_loss.append(train_loss)
     plt.plot(range(epoch), ep_train_loss)
     plt.plot(range(epoch), ep_dev_loss)
-    plt.title('Learning curve - ABPd')
+    plt.title('Learning curve - ABPs')
     plt.xlabel('Epoch')
     plt.ylabel('MSE')
     plt.legend(['Training Loss', 'Validation Loss'])
