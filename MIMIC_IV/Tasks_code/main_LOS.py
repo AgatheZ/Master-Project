@@ -27,7 +27,8 @@ TBI_split = False
 tuning = False
 SHAP = False
 imputation = 'No'
-model_name = 'LightGBM'
+model_name = 'XGBoost'
+threshold = 6
 
 assert model_name in ['RF', 'XGBoost', 'LightGBM', 'Stacking'], "Please specify a valid model name"
 assert imputation in ['No', 'carry_forward', 'linear', 'multivariate'], "Please specify a valid imputation method"
@@ -38,12 +39,13 @@ df_24h = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\preproce
 df_48h = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_48hour.csv', delimiter=',')
 df_med = pd.read_csv(r"C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_med.csv", delimiter=',')
 df_demographic = pd.read_csv(r"C:\Users\USER\OneDrive\Summer_project\Azure\data\demographics_mimic4.csv", delimiter=',')
-features = pd.read_csv(r'MIMIC_IV\resources\features.csv', header = None)
+features = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\Master-Project\MIMIC_IV\resources\features.csv', header = None)
+
 
 print('Data Loading - done')
 
 if nb_hours == 24:
-   features = features.loc[:415,1] 
+   features = features.loc[:224,2] 
 else:
    features = features.loc[:,0]
 
@@ -52,12 +54,14 @@ else:
 pr = Preprocessing(df_hourly, df_24h, df_48h, df_med, df_demographic, nb_hours, TBI_split, random_state, imputation)
 
 if TBI_split:
-   final_data_mild, final_data_severe, labels_mild, labels_severe = pr.preprocess_data()
+   final_data_mild, final_data_severe, labels_mild, labels_severe = pr.preprocess_data(threshold)
 else:
-   final_data, labels = pr.preprocess_data()
+   final_data, labels = pr.preprocess_data(threshold)
 print('Data Preprocessing - done')
 
 #PCA and T-SNE for feature visualisation 
+# pr.PCA_analysis(final_data, labels)
+
 
 
 
@@ -69,6 +73,7 @@ else:
    X_train, X_test, y_train, y_test = train_test_split(final_data, labels, test_size=0.2, shuffle = True, random_state=random_state)
    X_train, X_val, y_train, y_val  = train_test_split(X_train, y_train, test_size=0.25, random_state=random_state)
 
+print(X_train.shape)
 # #hyperparameter tuning 
 
 if tuning:
@@ -122,8 +127,12 @@ if model_name == 'Stacking':
    model = StackingCVClassifier(classifiers = (lgbm, rf, clf1, clf2), meta_classifier=xgb)
 
 #fits and evaluates the model
-eval = Evaluation(model, 'Tuned ' + model_name, final_data, labels, random_state, SHAP, features, nb_hours)
-eval.evaluate()
+if TBI_split:
+   eval = Evaluation(False, model, 'Tuned ' + model_name, final_data, labels, random_state, SHAP, features, nb_hours, severity = '', threshold = threshold)
+   eval.evaluate()
+else:
+   eval = Evaluation(False, model, 'Tuned ' + model_name, final_data, labels, random_state, SHAP, features, nb_hours, severity = '', threshold = threshold)
+   eval.evaluate()
 
 # #save the model 
 # filename = 'LOS_XGBoost_random_sampling.sav'
