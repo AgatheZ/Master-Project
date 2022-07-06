@@ -23,10 +23,10 @@ nb_hours = 24
 random_state = 1
 TBI_split = False
 tuning = False
-SHAP = False
+SHAP = True
 imputation = 'carry_forward'
-model_name = 'XGBoost'
-task = 'ABPm'
+model_name = 'LightGBM'
+task = 'ABPd'
 
 assert model_name in ['RF', 'XGBoost', 'LightGBM', 'Stacking'], "Please specify a valid model name"
 assert imputation in ['No','carry_forward', 'linear', 'multivariate'], "Please specify a valid imputation method"
@@ -38,10 +38,10 @@ df_24h = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\preproce
 df_48h = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_48hour.csv', delimiter=',')
 df_med = pd.read_csv(r"C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_med.csv", delimiter=',')
 df_demographic = pd.read_csv(r"C:\Users\USER\OneDrive\Summer_project\Azure\data\demographics_mimic4.csv", delimiter=',')
-features = pd.read_csv(r'MIMIC_IV\resources\features_reg.csv', header = None)
+features = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\Master-Project\MIMIC_IV\resources\features_reg.csv', header = None)
 print('Data Loading - done')
 if nb_hours == 24:
-   features = features.loc[:416,1] 
+   features = features.loc[:173,2] 
 else:
    features = features.loc[:,0]
 
@@ -167,16 +167,15 @@ model.fit(np.concatenate((X_train, X_val)), np.concatenate((y_train, y_val)))
 pred = model.predict(X_test)
 
 # plt.title('Analysis of the ABPm predictions')
-# plt.plot(range(75), pred)
-# plt.plot(range(75), y_test, c='red')
+# plt.plot(range(75), pred, c='red')
+# plt.plot(range(75), y_test)
 # plt.legend(['predicted values (XGBOOST)', 'original values'])
 # plt.xlabel('Patient n°')
 # plt.ylabel('ABPm (mmHg)')
 
-# plt.grid()
 
-# plt.show()
+plt.show()
 
-eval = Evaluation(model, 'Tuned ' + model_name, final_data, labels, random_state, SHAP, features, nb_hours)
+eval = Evaluation(True, model, 'Tuned ' + model_name, final_data, labels, random_state, SHAP, features, nb_hours)
 eval.evaluate_regression()
 
