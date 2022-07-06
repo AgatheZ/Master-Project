@@ -1,3 +1,4 @@
+import matplotlib
 from sklearn.model_selection import cross_val_score
 from sklearn.metrics import accuracy_score, confusion_matrix
 from sklearn.model_selection import cross_val_score, StratifiedKFold, KFold
@@ -11,13 +12,16 @@ import statistics
 import numpy as np
 import pandas as pd
 import shap
-import math 
+import math
+
+from xgboost import XGBClassifier 
 
 
 
 class Evaluation:
-    def __init__(self, model, model_name, X, y, random_state, SHAP, feature_names, nb_hours, severity = ''):
+    def __init__(self, reg = True, model = XGBClassifier(), model_name = 'XGBoost', X = None, y = None, random_state = 1, SHAP = False, feature_names = None, nb_hours = 24, severity = '', threshold = 4):
         self.model = model
+        self.reg = reg
         self.model_name = model_name
         self.X = X
         self.y = y
@@ -26,6 +30,7 @@ class Evaluation:
         self.feature_names = feature_names
         self.nb_hours = nb_hours
         self.severity = severity
+        self.threshold = threshold
 
 
     
@@ -57,7 +62,7 @@ class Evaluation:
         # show the legend
         plt.legend()
         # show the plot
-        plt.title('Length of stay prediction (> 4 days) for %s TBI patients \n ROC curve - %.0fh'%(self.severity, self.nb_hours))
+        plt.title('Length of stay prediction (> %i days) for %s TBI patients \n ROC curve - %.0fh'%(self.threshold, self.severity, self.nb_hours))
         plt.show()
 
 
@@ -94,14 +99,18 @@ class Evaluation:
             tprs[-1][0] = 0.0
             
             if self.SHAP:
-                ex = shap.TreeExplainer(xgbc)
+                ex = shap.Explainer(xgbc)
                 shaps_values = ex.shap_values(X_test)
-                shap.summary_plot(shaps_values, pd.DataFrame(X_test, columns = self.feature_names))
+                plt.figure(figsize = (15,15))
+                shap.summary_plot(shaps_values, pd.DataFrame(X_test, columns = self.feature_names), show = False)
+
+                plt.savefig('SHAP_LOS_{}.png'.format(self.threshold),bbox_inches='tight', dpi=300)
                 self.SHAP = False
 
         print('Averaged accuracy (5-folds): %.3f ±  %.3f' % (np.mean(accs), statistics.stdev(accs)))
         print('Averaged f1-Score (5-folds): %.3f ±  %.3f' % (np.mean(f1s), statistics.stdev(f1s)))
         print('Averaged AUROC (5-folds): %.3f ±  %.3f' % (np.mean(rocs), statistics.stdev(rocs)))
+
 
         plt.figure()
         self.ROC_plot(rocs, fprs, tprs)
@@ -128,7 +137,7 @@ class Evaluation:
             mae.append(mean_abs)
             
             if self.SHAP:
-                ex = shap.TreeExplainer(xgbc)
+                ex = shap.Explainer(xgbc)
                 shaps_values = ex.shap_values((X_test))
                 shap.summary_plot(shaps_values, pd.DataFrame(X_test, columns = self.feature_names))
                 self.SHAP = False
