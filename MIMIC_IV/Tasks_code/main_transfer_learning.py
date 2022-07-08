@@ -29,8 +29,11 @@ lr = 0.001
 learning_rate_decay = 7 
 n_epochs = 10
 batch_size = 16
-task = 'ABPd'
+lb = 'ABPd'
 is_cuda = torch.cuda.is_available()
+task = 'augmentation' #augmentation or cohort split
+
+
 
 # If we have a GPU available, we'll set our device to GPU. We'll use this device variable later in our code.
 if is_cuda:
@@ -193,73 +196,116 @@ def train(train_loader, dev_loader, test_loader, learn_rate, save = True, task =
 
 
 ##data loading 
-df_hourly = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_hour.csv', delimiter=',')
+df_hourly_augmented = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_hour_augmented.csv', delimiter=',')
 df_24h = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_24hour.csv', delimiter=',')
 df_48h = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_48hour.csv', delimiter=',')
 df_med = pd.read_csv(r"C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_med.csv", delimiter=',')
-df_demographic = pd.read_csv(r"C:\Users\USER\OneDrive\Summer_project\Azure\data\demographics_mimic4.csv", delimiter=',')
+df_demographic_augmented = pd.read_csv(r"C:\Users\USER\OneDrive\Summer_project\Azure\data\demographics_mimic4_augmented.csv", delimiter=',')
+df_hourly = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_hour_augmented.csv', delimiter=',')
+df_demographic = pd.read_csv(r"C:\Users\USER\OneDrive\Summer_project\Azure\data\demographics_mimic4_augmented.csv", delimiter=',')
+
 features = pd.read_csv(r'MIMIC_IV\resources\features_reg.csv', header = None)
 features = features.loc[:416,1] 
+print(features)
+pr = Preprocessing(df_hourly_augmented, df_24h, df_48h, df_med, df_demographic_augmented, nb_hours, TBI_split, random_state, imputation)
+pr_TBI = Preprocessing(df_hourly, df_24h, df_48h, df_med, df_demographic, nb_hours, TBI_split, random_state, imputation)
 
-pr = Preprocessing(df_hourly, df_24h, df_48h, df_med, df_demographic, nb_hours, TBI_split, random_state, imputation)
-data, labels, data_mild, labels_mild, data_severe, labels_severe = pr.time_series_pr(task, transfer=True)
+# data, labels, data_mild, labels_mild, data_severe, labels_severe = pr.time_series_pr(lb, transfer=True)
+
+data, labels = pr.time_series_pr(lb, transfer=False)
+data_TBI, labels_TBI = pr_TBI.time_series_pr(lb, transfer=False)
+
 final_data = np.array(data)
 final_data = np.transpose(final_data, (0,2,1))
 
-print('Pretraining with the whole dataset')
-#Pretraining with the whole dataset 
-X_train, X_test, y_train, y_test = train_test_split(final_data, labels, test_size=0.2, shuffle = True, random_state=random_state)
-X_train, X_val, y_train, y_val  = train_test_split(X_train, y_train, test_size=0.25, random_state=random_state)
+final_data_TBI = np.array(data_TBI)
+final_data_TBI = np.transpose(final_data_TBI, (0,2,1))
 
-train_data = TensorDataset(torch.from_numpy(X_train), torch.from_numpy(y_train))
-train_loader = DataLoader(train_data, shuffle=True, batch_size=batch_size, drop_last=True)
+if task == 'augmentation':
+    print('Pretraining with the augmented dataset')
+    #Pretraining with the whole dataset 
+    X_train, X_test, y_train, y_test = train_test_split(final_data, labels, test_size=0.2, shuffle = True, random_state=random_state)
+    X_train, X_val, y_train, y_val  = train_test_split(X_train, y_train, test_size=0.25, random_state=random_state)
 
-dev_data = TensorDataset(torch.from_numpy(X_val), torch.from_numpy(y_val))
-dev_loader = DataLoader(dev_data, shuffle=True, batch_size=batch_size, drop_last=True)
+    train_data = TensorDataset(torch.from_numpy(X_train), torch.from_numpy(y_train))
+    train_loader = DataLoader(train_data, shuffle=True, batch_size=batch_size, drop_last=True)
 
-test_data = TensorDataset(torch.from_numpy(X_test), torch.from_numpy(y_test))
-test_loader = DataLoader(test_data, shuffle=True, batch_size=batch_size, drop_last=True)
-pretrained_model = train(train_loader, dev_loader, test_loader, learn_rate = lr, hidden=512, layers= 49, task = task, save = True, model_type="GRU", EPOCHS = n_epochs, severe = '')
+    dev_data = TensorDataset(torch.from_numpy(X_val), torch.from_numpy(y_val))
+    dev_loader = DataLoader(dev_data, shuffle=True, batch_size=batch_size, drop_last=True)
 
-print('Finetuning for mild cohort')
-#Fine-tuning tasks - mild
+    test_data = TensorDataset(torch.from_numpy(X_test), torch.from_numpy(y_test))
+    test_loader = DataLoader(test_data, shuffle=True, batch_size=batch_size, drop_last=True)
+    pretrained_model = train(train_loader, dev_loader, test_loader, learn_rate = lr, hidden=512, layers= 49, task = lb, save = True, model_type="GRU", EPOCHS = n_epochs, severe = '')
 
-final_data = np.array(data_mild)
-final_data = np.transpose(final_data, (0,2,1))
+    print('Finetuning for TBI cohort')
+    X_train, X_test, y_train, y_test = train_test_split(final_data_TBI, labels_TBI, test_size=0.2, shuffle = True, random_state=random_state)
+    X_train, X_val, y_train, y_val  = train_test_split(X_train, y_train, test_size=0.25, random_state=random_state)
 
-X_train, X_test, y_train, y_test = train_test_split(final_data, labels_mild, test_size=0.2, shuffle = True, random_state=random_state)
-X_train, X_val, y_train, y_val  = train_test_split(X_train, y_train, test_size=0.25, random_state=random_state)
+    train_data = TensorDataset(torch.from_numpy(X_train), torch.from_numpy(y_train))
+    train_loader = DataLoader(train_data, shuffle=True, batch_size=batch_size, drop_last=True)
 
-train_data = TensorDataset(torch.from_numpy(X_train), torch.from_numpy(y_train))
-train_loader = DataLoader(train_data, shuffle=True, batch_size=batch_size, drop_last=True)
+    dev_data = TensorDataset(torch.from_numpy(X_val), torch.from_numpy(y_val))
+    dev_loader = DataLoader(dev_data, shuffle=True, batch_size=batch_size, drop_last=True)
 
-dev_data = TensorDataset(torch.from_numpy(X_val), torch.from_numpy(y_val))
-dev_loader = DataLoader(dev_data, shuffle=True, batch_size=batch_size, drop_last=True)
+    test_data = TensorDataset(torch.from_numpy(X_test), torch.from_numpy(y_test))
+    test_loader = DataLoader(test_data, shuffle=True, batch_size=batch_size, drop_last=True)
+    pretrained_model = train(train_loader, dev_loader, test_loader, learn_rate = lr, hidden=512, layers= 49, task = lb, save = True, model_type="GRU", EPOCHS = n_epochs, severe = '')
 
-test_data = TensorDataset(torch.from_numpy(X_test), torch.from_numpy(y_test))
-test_loader = DataLoader(test_data, shuffle=True, batch_size=batch_size, drop_last=True)
+else: 
+    print('Pretraining with the whole dataset')
+    #Pretraining with the whole dataset 
+    X_train, X_test, y_train, y_test = train_test_split(final_data, labels, test_size=0.2, shuffle = True, random_state=random_state)
+    X_train, X_val, y_train, y_val  = train_test_split(X_train, y_train, test_size=0.25, random_state=random_state)
 
-# PATH = r'C:\Users\USER\OneDrive\Summer_project\Azure\Master-Project\MIMIC_IV\models\GRU_{}_{}_{}_{}_{}'.format(task, '', 512, 49, 25) 
-# pretrained_model = torch.load(PATH)
+    train_data = TensorDataset(torch.from_numpy(X_train), torch.from_numpy(y_train))
+    train_loader = DataLoader(train_data, shuffle=True, batch_size=batch_size, drop_last=True)
+
+    dev_data = TensorDataset(torch.from_numpy(X_val), torch.from_numpy(y_val))
+    dev_loader = DataLoader(dev_data, shuffle=True, batch_size=batch_size, drop_last=True)
+
+    test_data = TensorDataset(torch.from_numpy(X_test), torch.from_numpy(y_test))
+    test_loader = DataLoader(test_data, shuffle=True, batch_size=batch_size, drop_last=True)
+    pretrained_model = train(train_loader, dev_loader, test_loader, learn_rate = lr, hidden=512, layers= 49, task = lb, save = True, model_type="GRU", EPOCHS = n_epochs, severe = '')
+
+    print('Finetuning for mild cohort')
+    #Fine-tuning tasks - mild
+
+    final_data = np.array(data_mild)
+    final_data = np.transpose(final_data, (0,2,1))
+
+    X_train, X_test, y_train, y_test = train_test_split(final_data, labels_mild, test_size=0.2, shuffle = True, random_state=random_state)
+    X_train, X_val, y_train, y_val  = train_test_split(X_train, y_train, test_size=0.25, random_state=random_state)
+
+    train_data = TensorDataset(torch.from_numpy(X_train), torch.from_numpy(y_train))
+    train_loader = DataLoader(train_data, shuffle=True, batch_size=batch_size, drop_last=True)
+
+    dev_data = TensorDataset(torch.from_numpy(X_val), torch.from_numpy(y_val))
+    dev_loader = DataLoader(dev_data, shuffle=True, batch_size=batch_size, drop_last=True)
+
+    test_data = TensorDataset(torch.from_numpy(X_test), torch.from_numpy(y_test))
+    test_loader = DataLoader(test_data, shuffle=True, batch_size=batch_size, drop_last=True)
+
+    # PATH = r'C:\Users\USER\OneDrive\Summer_project\Azure\Master-Project\MIMIC_IV\models\GRU_{}_{}_{}_{}_{}'.format(task, '', 512, 49, 25) 
+    # pretrained_model = torch.load(PATH)
 
 
-mild_model = train(train_loader, dev_loader, test_loader, learn_rate = lr, task = task,hidden=512, layers= 49,  save = True, model_type=pretrained_model, EPOCHS = n_epochs, severe= 'mild')
+    mild_model = train(train_loader, dev_loader, test_loader, learn_rate = lr, task = lb,hidden=512, layers= 49,  save = True, model_type=pretrained_model, EPOCHS = n_epochs, severe= 'mild')
 
-print('Finetuning for severe cohort')
-#Fine-tuning tasks - severe
+    print('Finetuning for severe cohort')
+    #Fine-tuning tasks - severe
 
-final_data = np.array(data_severe)
-final_data = np.transpose(final_data, (0,2,1))
-X_train, X_test, y_train, y_test = train_test_split(final_data, labels_severe, test_size=0.2, shuffle = True, random_state=random_state)
-X_train, X_val, y_train, y_val  = train_test_split(X_train, y_train, test_size=0.25, random_state=random_state)
+    final_data = np.array(data_severe)
+    final_data = np.transpose(final_data, (0,2,1))
+    X_train, X_test, y_train, y_test = train_test_split(final_data, labels_severe, test_size=0.2, shuffle = True, random_state=random_state)
+    X_train, X_val, y_train, y_val  = train_test_split(X_train, y_train, test_size=0.25, random_state=random_state)
 
-train_data = TensorDataset(torch.from_numpy(X_train), torch.from_numpy(y_train))
-train_loader = DataLoader(train_data, shuffle=True, batch_size=batch_size, drop_last=True)
+    train_data = TensorDataset(torch.from_numpy(X_train), torch.from_numpy(y_train))
+    train_loader = DataLoader(train_data, shuffle=True, batch_size=batch_size, drop_last=True)
 
-dev_data = TensorDataset(torch.from_numpy(X_val), torch.from_numpy(y_val))
-dev_loader = DataLoader(dev_data, shuffle=True, batch_size=batch_size, drop_last=True)
+    dev_data = TensorDataset(torch.from_numpy(X_val), torch.from_numpy(y_val))
+    dev_loader = DataLoader(dev_data, shuffle=True, batch_size=batch_size, drop_last=True)
 
-test_data = TensorDataset(torch.from_numpy(X_test), torch.from_numpy(y_test))
-test_loader = DataLoader(test_data, shuffle=True, batch_size=batch_size, drop_last=True)
+    test_data = TensorDataset(torch.from_numpy(X_test), torch.from_numpy(y_test))
+    test_loader = DataLoader(test_data, shuffle=True, batch_size=batch_size, drop_last=True)
 
-severe_model = train(train_loader, dev_loader, test_loader, learn_rate = lr, task = task, hidden=512, layers= 49, save = True, model_type=pretrained_model, EPOCHS = n_epochs, severe = 'severe')
+    severe_model = train(train_loader, dev_loader, test_loader, learn_rate = lr, task = lb, hidden=512, layers= 49, save = True, model_type=pretrained_model, EPOCHS = n_epochs, severe = 'severe')

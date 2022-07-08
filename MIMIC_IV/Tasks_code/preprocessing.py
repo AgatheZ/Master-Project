@@ -283,12 +283,13 @@ class Preprocessing:
                 data_pr[i] = data_pr[i].fillna(method = "ffill")
                 data_pr[i] = data_pr[i].fillna(mean)
 
-        data_mild = np.array([data_pr[i] for i in mild_idx])
-        data_severe = np.array([data_pr[i] for i in severe_idx])
-        labels_mild = np.array([labels[i] for i in mild_idx])
-        labels_severe = np.array([labels[i] for i in severe_idx])
+        
 
         if transfer:
+            data_mild = np.array([data_pr[i] for i in mild_idx])
+            data_severe = np.array([data_pr[i] for i in severe_idx])
+            labels_mild = np.array([labels[i] for i in mild_idx])
+            labels_severe = np.array([labels[i] for i in severe_idx])
             return data_pr, labels, data_mild, labels_mild, data_severe, labels_severe
 
         return data_pr, labels

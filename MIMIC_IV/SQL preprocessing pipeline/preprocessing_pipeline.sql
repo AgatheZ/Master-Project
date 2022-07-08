@@ -1,4 +1,18 @@
 --- Create a table containing the stay id of TBI patients 
+-- DROP TABLE IF EXISTS mimiciv.TBI;
+-- CREATE TABLE mimiciv.TBI AS 
+-- (
+
+-- SELECT icu.stay_id
+-- FROM mimic_hosp.diagnoses_icd v
+-- JOIN mimic_hosp.d_icd_diagnoses d 
+-- ON v.icd_code = d.icd_code
+-- JOIN mimic_icu.icustays icu 
+-- ON v.subject_id = icu.subject_id
+-- WHERE (icu.los >= 2) AND ((d.icd_code LIKE '850%') OR (d.icd_code LIKE '851%') OR (d.icd_code LIKE '852%') OR (d.icd_code LIKE '853%') OR (d.icd_code LIKE '854%') OR (d.icd_code LIKE '959.01%'))
+-- ); -- Only take patients with records > 48h
+
+--- Create a table containing the stay id of TBI patients - AUGMENTED VERSION
 DROP TABLE IF EXISTS mimiciv.TBI;
 CREATE TABLE mimiciv.TBI AS 
 (
@@ -9,9 +23,10 @@ JOIN mimic_hosp.d_icd_diagnoses d
 ON v.icd_code = d.icd_code
 JOIN mimic_icu.icustays icu 
 ON v.subject_id = icu.subject_id
-WHERE (icu.los >= 2) AND ((d.icd_code LIKE '850%') OR (d.icd_code LIKE '851%') OR (d.icd_code LIKE '852%') OR (d.icd_code LIKE '853%') OR (d.icd_code LIKE '854%') OR (d.icd_code LIKE '959.01%'))
+WHERE (icu.los >= 2) AND ((d.icd_code LIKE '850%') OR (d.icd_code LIKE '851%') OR (d.icd_code LIKE '852%') OR (d.icd_code LIKE '853%') OR (d.icd_code LIKE '854%') OR (d.icd_code LIKE '959.01%')
+ OR (d.icd_code LIKE '800%')  OR (d.icd_code LIKE '801%')  OR (d.icd_code LIKE '802%')  OR (d.icd_code LIKE '803%')  OR (d.icd_code LIKE '804%')
+  OR (d.icd_code LIKE '87%')  OR (d.icd_code LIKE '925%')  OR (d.icd_code LIKE '926%')  OR (d.icd_code LIKE '927%')  OR (d.icd_code LIKE '928%') OR (d.icd_code LIKE '929%'))
 ); -- Only take patients with records > 48h
-
 
 ---Creation of the vitals lookup table 
 DROP TABLE IF EXISTS mimiciv.lookup CASCADE;
@@ -277,7 +292,7 @@ GROUP BY stay_id, vital_name
 rest AS
 (
 SELECT DISTINCT v.stay_id, p.gender, p.anchor_age AS age, icu.los as LOS,  ROUND(hw.weight_first / POWER(hw.height_first / 100, 2), 3) AS BMI, case when p.dod is not null and p.dod <= icu.outtime then 1 else 0 end as death
-FROM mimiciv.aggregated_vitals v 
+FROM mimiciv.TBI v 
 JOIN mimic_icu.icustays icu ON v.stay_id = icu.stay_id
 JOIN mimic_core.patients p ON p.subject_id = icu.subject_id
 LEFT JOIN mimiciv.heightweight hw ON hw.stay_id = icu.stay_id
