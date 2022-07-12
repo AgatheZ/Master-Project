@@ -12,6 +12,7 @@ import time
 import matplotlib.pyplot as plt
 from sklearn.model_selection import (KFold, StratifiedKFold, cross_val_predict,
                                      cross_validate, train_test_split)
+from data_augmentation import DataAugmentation
 warnings.filterwarnings("ignore")
 
 time.clock = time.time
@@ -79,18 +80,18 @@ def train(train_loader, dev_loader, test_loader, learn_rate, save = True, task =
             counter += 1
             h = h.data
             model.zero_grad()
-            
+            x = x + (0.1**0.5)*torch.randn(x.shape)
             y_pred, h = model(x.to(device).float(), h)
             y_pred = torch.squeeze(y_pred)
             y_pred_col.append(y_pred)
 
-            pred.append(y_pred)
+            pred.append(y_pred.cpu().detach().numpy())
             label.append(train_label)
-            loss = criterion(y_pred.float(), train_label.float())
+            loss = criterion(y_pred.float(), train_label.to(device).float())
             m = nn.L1Loss()
             mae.append(
                 
-                    (m(y_pred.float(), train_label.float())).item()
+                    (m(y_pred.float(), train_label.to(device).float())).item()
             )
             losses.append(loss.item())
 
@@ -122,9 +123,9 @@ def train(train_loader, dev_loader, test_loader, learn_rate, save = True, task =
             label.append(dev_label)
 
             # Compute loss
-            loss = criterion(y_pred.float(), dev_label.float())
+            loss = criterion(y_pred.float(), dev_label.to(device).float())
             m = nn.L1Loss()
-            mae.append(m(y_pred.float(), dev_label.float()).item())
+            mae.append(m(y_pred.float(), dev_label.to(device).float()).item())
             losses.append(loss.item())
             
         dev_mae = np.mean((mae))
@@ -148,14 +149,14 @@ def train(train_loader, dev_loader, test_loader, learn_rate, save = True, task =
             y_pred = torch.squeeze(y_pred)
             
             # Save predict and label
-            pred.append(y_pred.detach().numpy())
-            label.append(test_label.detach().numpy())
+            pred.append(y_pred.cpu().detach().numpy())
+            label.append(test_label.cpu().detach().numpy())
 
             # Compute loss
-            loss = criterion(y_pred.float(), test_label.float())
+            loss = criterion(y_pred.float(), test_label.to(device).float())
             m = nn.L1Loss()
             mae.append(
-                m(y_pred.float(), test_label.float()).item()
+                m(y_pred.float(), test_label.to(device).float()).item()
             )
             losses.append(loss.item())
             
@@ -179,6 +180,7 @@ def train(train_loader, dev_loader, test_loader, learn_rate, save = True, task =
             epoch, train_loss, dev_loss, test_loss, auc_score))
         ep_dev_loss.append(dev_loss)
         ep_train_loss.append(train_loss)
+    
     plt.figure()
     plt.plot(range(epoch), ep_train_loss)
     plt.plot(range(epoch), ep_dev_loss)
@@ -204,9 +206,11 @@ df_demographic_augmented = pd.read_csv(r"C:\Users\USER\OneDrive\Summer_project\A
 df_hourly = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_hour_augmented.csv', delimiter=',')
 df_demographic = pd.read_csv(r"C:\Users\USER\OneDrive\Summer_project\Azure\data\demographics_mimic4_augmented.csv", delimiter=',')
 
+
 features = pd.read_csv(r'MIMIC_IV\resources\features_reg.csv', header = None)
 features = features.loc[:416,1] 
-print(features)
+
+
 pr = Preprocessing(df_hourly_augmented, df_24h, df_48h, df_med, df_demographic_augmented, nb_hours, TBI_split, random_state, imputation)
 pr_TBI = Preprocessing(df_hourly, df_24h, df_48h, df_med, df_demographic, nb_hours, TBI_split, random_state, imputation)
 
@@ -215,9 +219,17 @@ pr_TBI = Preprocessing(df_hourly, df_24h, df_48h, df_med, df_demographic, nb_hou
 data, labels = pr.time_series_pr(lb, transfer=False)
 data_TBI, labels_TBI = pr_TBI.time_series_pr(lb, transfer=False)
 
+test_labels = np.transpose(np.array([[labels]*24]), (2,0,1))
+
 final_data = np.array(data)
 final_data = np.transpose(final_data, (0,2,1))
 
+concatenated_data = np.concatenate((final_data, test_labels), 1)
+
+da = DataAugmentation(True, concatenated_data, random_state)
+da.augment_VAE(50,16,0.003)
+
+###############################################################################
 final_data_TBI = np.array(data_TBI)
 final_data_TBI = np.transpose(final_data_TBI, (0,2,1))
 
