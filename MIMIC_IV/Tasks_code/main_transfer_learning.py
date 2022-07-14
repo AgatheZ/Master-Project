@@ -2,6 +2,7 @@ import numpy as np
 import torch
 from sklearn.metrics import roc_auc_score, mean_absolute_error
 import GRU
+from VAE import VAE
 import pandas as pd 
 import torch.nn as nn
 from preprocessing import Preprocessing
@@ -14,9 +15,9 @@ from sklearn.model_selection import (KFold, StratifiedKFold, cross_val_predict,
                                      cross_validate, train_test_split)
 from data_augmentation import DataAugmentation
 warnings.filterwarnings("ignore")
-
+import pickle
 time.clock = time.time
-
+import sys
 
 #Parameters
 nb_hours = 24
@@ -226,8 +227,38 @@ final_data = np.transpose(final_data, (0,2,1))
 
 concatenated_data = np.concatenate((final_data, test_labels), 1)
 
-da = DataAugmentation(True, concatenated_data, random_state)
-da.augment_VAE(50,16,0.003)
+# da = DataAugmentation(True, concatenated_data, random_state)
+# da.augment_VAE(450,16,0.003)
+
+# da = DataAugmentation(True, concatenated_data, random_state)
+# vae = VAE(concatenated_data.shape[2]*concatenated_data.shape[1])
+# model = da.train_VAE(vae, 400, 16, 0.003)
+
+
+# with open('VAE_model.pkl', 'wb') as outp:
+#     pickle.dump(model, outp, pickle.HIGHEST_PROTOCOL)
+
+with open('VAE_model.pkl', 'rb') as inp:
+    model = pickle.load(inp)
+
+n_samples = 1000
+latent_dim = 20
+z = torch.randn(n_samples, latent_dim).to(device)
+with torch.no_grad():
+    z = z.to(device).double()
+    samples = model.decode(z)
+    samples = samples.cpu()
+
+new_samples = samples.reshape((n_samples, concatenated_data.shape[1], -1)).detach().numpy()[:,0:-1,:]
+new_labels = new_samples[:,-1,:]
+new_labels = new_labels[:,0]
+# plt.figure()
+# plt.plot(range(24), samples[12][3])
+# plt.show()
+
+final_data = np.concatenate((new_samples, final_data))
+print(final_data.shape)
+labels = np.concatenate((new_labels, labels))
 
 ###############################################################################
 final_data_TBI = np.array(data_TBI)

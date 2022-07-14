@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 
 class VAE(nn.Module):
-    def __init__(self, D_in, H=14, H2=14, latent_dim=3):
+    def __init__(self, D_in, H=512, H2=512, latent_dim=20):
         
         #Encoder
         super(VAE,self).__init__()

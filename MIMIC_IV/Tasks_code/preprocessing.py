@@ -13,7 +13,7 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 
 class Preprocessing:
-    def __init__(self, df_hourly, df_24h, df_48h, df_med, df_demographic, nb_hours, TBI_split, random_state, imputation):
+    def __init__(self, df_hourly=None, df_24h=None, df_48h=None, df_med=None, df_demographic=None, nb_hours=24, TBI_split=False, random_state=1, imputation='No'):
         self.df_hourly = df_hourly
         self.df_24h = df_24h
         self.df_48h = df_48h
