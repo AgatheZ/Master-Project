@@ -244,7 +244,7 @@ class Preprocessing:
         labels = labels.dropna()
         task2_cohort = labels.index.values
         labels = labels.values
-
+        
         ##Restriction of the cohort 
         self.df_hourly = self.df_hourly.reset_index(level=['stay_id'])
         self.df_hourly = self.df_hourly[self.df_hourly['stay_id'].isin(task2_cohort)]
@@ -319,7 +319,10 @@ class Preprocessing:
         self.df_48h = self.df_48h.drop(columns = ['icu_intime'])
 
         ##pivot the tables 
-        self.df_hourly = self.df_hourly.pivot_table(index = ['stay_id', 'hour_from_intime'], columns = 'feature_name', values = 'feature_mean_value')
+        if 'std' in self.df_hourly.columns:
+            self.df_hourly = self.df_hourly.pivot_table(index = ['stay_id', 'hour_from_intime'], columns = ['feature_name', 'std'], values = 'feature_mean_value')
+        else:
+            self.df_hourly = self.df_hourly.pivot_table(index = ['stay_id', 'hour_from_intime'], columns = 'feature_name', values = 'feature_mean_value')
         self.df_24h = self.df_24h.pivot_table(index = ['stay_id', 'hour_from_intime'], columns = 'feature_name', values = 'feature_mean_value')
         self.df_48h = self.df_48h.pivot_table(index = ['stay_id', 'hour_from_intime'], columns = 'feature_name', values = 'feature_mean_value')
         self.df_med = self.df_med.pivot_table(index = ['stay_id'], columns = 'med_name', values = 'amount')
@@ -330,7 +333,7 @@ class Preprocessing:
         labels = labels.dropna()
         task2_cohort = labels.index.values
         labels = labels.values
-
+        # np.save('cohort_%s'%label, labels)
         ##Restriction of the cohort 
         self.df_hourly = self.df_hourly.reset_index(level=['stay_id'])
         self.df_24h = self.df_24h.reset_index(level=['stay_id'])
@@ -393,3 +396,74 @@ class Preprocessing:
         if self.imputation != 'No':
             final_data = normalize(final_data)
         return final_data, labels
+
+    def std_pr(self, label, transfer):
+        self.df_hourly = self.df_hourly.drop(columns = ['icu_intime'])
+        self.df_24h = self.df_24h.drop(columns = ['icu_intime'])
+        ##pivot the tables 
+        df_std = self.df_hourly.pivot_table(index = ['stay_id', 'hour_from_intime'], columns = 'feature_name', values = 'std')
+        df_std = df_std.reset_index(level=['hour_from_intime'])
+        labels_std = df_std[df_std.hour_from_intime == 25][label].dropna()
+        
+
+        self.df_hourly = self.df_hourly.pivot_table(index = ['stay_id', 'hour_from_intime'], columns = 'feature_name', values = 'feature_mean_value')
+        self.df_24h = self.df_24h.pivot_table(index = ['stay_id', 'hour_from_intime'], columns = 'feature_name', values = 'feature_mean_value')
+
+        ##label extraction 
+        self.df_hourly_copy = self.df_hourly.reset_index(level=['hour_from_intime'])
+        labels = self.df_hourly_copy[self.df_hourly_copy.hour_from_intime == 25][label]
+        labels = labels.dropna()
+        task2_cohort = labels.index.values
+        labels = labels.merge((labels_std))
+
+        ##Restriction of the cohort 
+        self.df_hourly = self.df_hourly.reset_index(level=['stay_id'])
+        self.df_hourly = self.df_hourly[self.df_hourly['stay_id'].isin(task2_cohort)]
+        self.df_demographic = self.df_demographic[self.df_demographic['stay_id'].isin(task2_cohort)]
+
+        self.df_demographic.gender[self.df_demographic.gender == 'F'] = 1
+        self.df_demographic.gender[self.df_demographic.gender == 'M'] = 0
+        
+        ##create batches 
+        batch_hourly = self.create_batchs(self.df_hourly)
+        batch_demographic = self.create_batchs(self.df_demographic)
+
+        ##reindex for patients that don't have entries at the begginning of their stays + cut to 48h
+        ##aggregation as well
+        data_pr = []
+        for i in range(len(batch_demographic)):
+            batch_hourly[i] = batch_hourly[i].reindex(range(1, self.nb_hours + 1), fill_value = None)
+            
+            batch_demographic[i] = batch_demographic[i].reindex(range(1, self.nb_hours + 1), fill_value = None)
+            batch_demographic[i] = batch_demographic[i].fillna(batch_demographic[i].mean())
+            batch_hourly[i] = batch_hourly[i].drop(columns = 'stay_id')
+            batch_demographic[i] = batch_demographic[i].drop(columns = 'stay_id')
+            data_pr.append(pd.concat([batch_hourly[i], batch_demographic[i]], axis=1))
+        
+        #divide between severe and mild
+        if transfer:
+            dem = self.df_demographic.drop(columns = 'stay_id').reset_index(drop=True)
+            dem['severity'] = dem.apply(lambda row: self.label_severity(row), axis=1)
+    
+            mild_idx = np.array(dem[dem['severity'] == 'mild'].index)
+            severe_idx = np.array(dem[dem['severity'] == 'severe'].index)
+            dem.pop('severity')
+
+        mean = pd.concat(data_pr).mean()
+        for i in range(len(batch_hourly)):
+                data_pr[i] = data_pr[i].fillna(method = "ffill")
+                data_pr[i] = data_pr[i].fillna(mean)
+
+        
+
+        if transfer:
+            data_mild = np.array([data_pr[i] for i in mild_idx])
+            data_severe = np.array([data_pr[i] for i in severe_idx])
+            labels_mild = np.array([labels[i] for i in mild_idx])
+            labels_severe = np.array([labels[i] for i in severe_idx])
+            return data_pr, labels, data_mild, labels_mild, data_severe, labels_severe
+
+        return data_pr, labels
+
+
+

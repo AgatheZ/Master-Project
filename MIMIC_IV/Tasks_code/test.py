@@ -21,8 +21,20 @@ pr = Preprocessing()
 
 ds = df.pivot_table(index = ['stay_id', 'hour_from_intime'], columns = 'vital_name', values = 'vital_reading')
 ds = ds.reset_index(level=['stay_id'])
+idx_ABPm = np.load(r'C:\Users\USER\OneDrive\Summer_project\Azure\Master-Project\MIMIC_IV\Database analysis\preprocessed_batches\cohort_ABPm.npy', allow_pickle = True)
+
+
+labels = ds[ds.index == 25]
+print(labels)
+labels = labels.dropna()
+task2_cohort = labels['stay_id']
+print(task2_cohort)
+
+import sys
+sys.exit()
 batchs = []
-ids = ds.stay_id.unique()
+print(idx_ABPm)
+ids = idx_ABPm
 for i in ids:
     batchs.append(ds.loc[ds['stay_id'] == i])
 

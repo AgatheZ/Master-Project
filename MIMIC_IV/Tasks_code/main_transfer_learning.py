@@ -33,7 +33,7 @@ n_epochs = 10
 batch_size = 16
 lb = 'ABPd'
 is_cuda = torch.cuda.is_available()
-task = 'augmentation' #augmentation or cohort split
+task = 'std' #augmentation or cohort split
 
 
 
@@ -204,67 +204,85 @@ df_24h = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\preproce
 df_48h = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_48hour.csv', delimiter=',')
 df_med = pd.read_csv(r"C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_med.csv", delimiter=',')
 df_demographic_augmented = pd.read_csv(r"C:\Users\USER\OneDrive\Summer_project\Azure\data\demographics_mimic4_augmented.csv", delimiter=',')
-df_hourly = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_hour_augmented.csv', delimiter=',')
-df_demographic = pd.read_csv(r"C:\Users\USER\OneDrive\Summer_project\Azure\data\demographics_mimic4_augmented.csv", delimiter=',')
+df_hourly = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_hour_std.csv', delimiter=',')
+df_demographic = pd.read_csv(r"C:\Users\USER\OneDrive\Summer_project\Azure\data\demographics_mimic4.csv", delimiter=',')
 
 
 features = pd.read_csv(r'MIMIC_IV\resources\features_reg.csv', header = None)
 features = features.loc[:416,1] 
 
-
-pr = Preprocessing(df_hourly_augmented, df_24h, df_48h, df_med, df_demographic_augmented, nb_hours, TBI_split, random_state, imputation)
+pr = Preprocessing(df_hourly, df_24h, df_48h, df_med, df_demographic, nb_hours, TBI_split, random_state, imputation)
 pr_TBI = Preprocessing(df_hourly, df_24h, df_48h, df_med, df_demographic, nb_hours, TBI_split, random_state, imputation)
 
-# data, labels, data_mild, labels_mild, data_severe, labels_severe = pr.time_series_pr(lb, transfer=True)
 
-data, labels = pr.time_series_pr(lb, transfer=False)
-data_TBI, labels_TBI = pr_TBI.time_series_pr(lb, transfer=False)
-
-test_labels = np.transpose(np.array([[labels]*24]), (2,0,1))
-
-final_data = np.array(data)
-final_data = np.transpose(final_data, (0,2,1))
-
-concatenated_data = np.concatenate((final_data, test_labels), 1)
-
-# da = DataAugmentation(True, concatenated_data, random_state)
-# da.augment_VAE(450,16,0.003)
-
-# da = DataAugmentation(True, concatenated_data, random_state)
-# vae = VAE(concatenated_data.shape[2]*concatenated_data.shape[1])
-# model = da.train_VAE(vae, 400, 16, 0.003)
-
-
-# with open('VAE_model.pkl', 'wb') as outp:
-#     pickle.dump(model, outp, pickle.HIGHEST_PROTOCOL)
-
-with open('VAE_model.pkl', 'rb') as inp:
-    model = pickle.load(inp)
-
-n_samples = 1000
-latent_dim = 20
-z = torch.randn(n_samples, latent_dim).to(device)
-with torch.no_grad():
-    z = z.to(device).double()
-    samples = model.decode(z)
-    samples = samples.cpu()
-
-new_samples = samples.reshape((n_samples, concatenated_data.shape[1], -1)).detach().numpy()[:,0:-1,:]
-new_labels = new_samples[:,-1,:]
-new_labels = new_labels[:,0]
-# plt.figure()
-# plt.plot(range(24), samples[12][3])
-# plt.show()
-
-final_data = np.concatenate((new_samples, final_data))
-print(final_data.shape)
-labels = np.concatenate((new_labels, labels))
 
 ###############################################################################
-final_data_TBI = np.array(data_TBI)
-final_data_TBI = np.transpose(final_data_TBI, (0,2,1))
+
+if task == 'std':
+    data, labels = pr.std_pr(lb, transfer=False)
+    sys.exit()
+    X_train, X_test, y_train, y_test = train_test_split(final_data, labels, test_size=0.2, shuffle = True, random_state=random_state)
+    X_train, X_val, y_train, y_val  = train_test_split(X_train, y_train, test_size=0.25, random_state=random_state)
+
+    train_data = TensorDataset(torch.from_numpy(X_train), torch.from_numpy(y_train))
+    train_loader = DataLoader(train_data, shuffle=True, batch_size=batch_size, drop_last=True)
+
+    dev_data = TensorDataset(torch.from_numpy(X_val), torch.from_numpy(y_val))
+    dev_loader = DataLoader(dev_data, shuffle=True, batch_size=batch_size, drop_last=True)
+
+    test_data = TensorDataset(torch.from_numpy(X_test), torch.from_numpy(y_test))
+    test_loader = DataLoader(test_data, shuffle=True, batch_size=batch_size, drop_last=True)
+    pretrained_model = train(train_loader, dev_loader, test_loader, learn_rate = lr, hidden=512, layers= 49, task = lb, save = True, model_type="GRU", EPOCHS = n_epochs, severe = '')
 
 if task == 'augmentation':
+
+    # data, labels, data_mild, labels_mild, data_severe, labels_severe = pr.time_series_pr(lb, transfer=True)
+
+    data, labels = pr.time_series_pr(lb, transfer=False)
+    data_TBI, labels_TBI = pr_TBI.time_series_pr(lb, transfer=False)
+
+    test_labels = np.transpose(np.array([[labels]*24]), (2,0,1))
+
+    final_data = np.array(data)
+    final_data = np.transpose(final_data, (0,2,1))
+
+    concatenated_data = np.concatenate((final_data, test_labels), 1)
+
+    # da = DataAugmentation(True, concatenated_data, random_state)
+    # da.augment_VAE(450,16,0.003)
+
+    # da = DataAugmentation(True, concatenated_data, random_state)
+    # vae = VAE(concatenated_data.shape[2]*concatenated_data.shape[1])
+    # model = da.train_VAE(vae, 400, 16, 0.003)
+
+
+    # with open('VAE_model.pkl', 'wb') as outp:
+    #     pickle.dump(model, outp, pickle.HIGHEST_PROTOCOL)
+
+    with open('VAE_model.pkl', 'rb') as inp:
+        model = pickle.load(inp)
+
+    n_samples = 1000
+    latent_dim = 20
+    z = torch.randn(n_samples, latent_dim).to(device)
+    with torch.no_grad():
+        z = z.to(device).double()
+        samples = model.decode(z)
+        samples = samples.cpu()
+
+    new_samples = samples.reshape((n_samples, concatenated_data.shape[1], -1)).detach().numpy()[:,0:-1,:]
+    new_labels = new_samples[:,-1,:]
+    new_labels = new_labels[:,0]
+    # plt.figure()
+    # plt.plot(range(24), samples[12][3])
+    # plt.show()
+
+    final_data = np.concatenate((new_samples, final_data))
+    print(final_data.shape)
+    labels = np.concatenate((new_labels, labels))
+    final_data_TBI = np.array(data_TBI)
+    final_data_TBI = np.transpose(final_data_TBI, (0,2,1))
+
     print('Pretraining with the augmented dataset')
     #Pretraining with the whole dataset 
     X_train, X_test, y_train, y_test = train_test_split(final_data, labels, test_size=0.2, shuffle = True, random_state=random_state)

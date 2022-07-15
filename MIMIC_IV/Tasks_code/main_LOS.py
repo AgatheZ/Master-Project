@@ -18,6 +18,9 @@ from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt 
 import seaborn as sns
 
+# Generate and plot a synthetic imbalanced classification dataset
+from collections import Counter
+
 warnings.filterwarnings("ignore")
 
 ##Variables 
@@ -27,8 +30,8 @@ TBI_split = False
 tuning = False
 SHAP = False
 imputation = 'No'
-model_name = 'XGBoost'
-threshold = 6
+model_name = 'LightGBM'
+threshold = 10
 
 assert model_name in ['RF', 'XGBoost', 'LightGBM', 'Stacking'], "Please specify a valid model name"
 assert imputation in ['No', 'carry_forward', 'linear', 'multivariate'], "Please specify a valid imputation method"
@@ -81,6 +84,11 @@ if tuning:
    best_param = xgboost_hyp_tuning.hyperopt()
 
 # final models evaluation using 5-fold cross validation  
+counter = Counter(labels)
+print(counter)
+# estimate scale_pos_weight value
+estimate = counter[0] / counter[1]
+
 if model_name == 'XGBoost':
    if TBI_split:
       best_param_mild = {'alpha': 0.0, 'colsample_bytree': 0.5404929749427543, 'eta': 0.08602706957522405, 'gamma': 1.8786165006154019, 'max_depth': 17.0, 'min_child_weight': 3.0}
@@ -93,7 +101,10 @@ if model_name == 'XGBoost':
       else:
          best_param = {'alpha': 0.0, 'colsample_bytree': 0.7336138546940976, 'eta': 0.3108407290269413, 'gamma': 2.3874687080350965, 'max_depth': 10.0, 'min_child_weight': 4.0}
    depth = best_param['max_depth']
-   model =  XGBClassifier(random_state = random_state, 
+
+
+   model =  XGBClassifier(scale_pos_weight = estimate,
+                     random_state = random_state, 
                         max_depth = int(depth), 
                         gamma = best_param['gamma'],
                         eta = best_param['eta'],
@@ -109,7 +120,7 @@ if model_name == 'RF':
 if model_name == 'LightGBM':
    #best_param = {'boosting_type': 'gbdt', 'colsample_by_tree': 0.9203696945188418, 'learning_rate': 0.04047240211150923, 'max_depth': 14.0, 'min_child_weight': 4.735811783605331, 'num_leaves': 32.0, 'reg_alpha': 0.33592465595298626, 'reg_lambda': 0.21263015922040293}
    best_param = {'boosting_type': 'gbdt', 'colsample_by_tree': 0.6473253528686873, 'learning_rate': 0.05933494691614115, 'max_depth': 4.0, 'min_child_weight': 4.648109212654841, 'num_leaves': 31.0, 'reg_alpha': 0.08306786314229996, 'reg_lambda': 0.4150980688456025}
-   model = lgb.LGBMClassifier(boosting_type=best_param['boosting_type'], num_leaves=int(best_param['num_leaves']), 
+   model = lgb.LGBMClassifier(weight = estimate, boosting_type=best_param['boosting_type'], num_leaves=int(best_param['num_leaves']), 
             max_depth= int(best_param['max_depth']), learning_rate=best_param['learning_rate'], reg_alpha=best_param['reg_alpha'], 
             reg_lambda = best_param['reg_lambda'], colsample_bytree= best_param['colsample_by_tree'], min_child_weight = best_param['min_child_weight'])
 

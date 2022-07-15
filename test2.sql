@@ -1,0 +1,1 @@
+select count (stay_id) from test;

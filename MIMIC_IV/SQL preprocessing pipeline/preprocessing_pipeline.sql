@@ -23,9 +23,8 @@ JOIN mimic_hosp.d_icd_diagnoses d
 ON v.icd_code = d.icd_code
 JOIN mimic_icu.icustays icu 
 ON v.subject_id = icu.subject_id
-WHERE (icu.los >= 2) AND ((d.icd_code LIKE '850%') OR (d.icd_code LIKE '851%') OR (d.icd_code LIKE '852%') OR (d.icd_code LIKE '853%') OR (d.icd_code LIKE '854%') OR (d.icd_code LIKE '959.01%')
- OR (d.icd_code LIKE '800%')  OR (d.icd_code LIKE '801%')  OR (d.icd_code LIKE '802%')  OR (d.icd_code LIKE '803%')  OR (d.icd_code LIKE '804%')
-  OR (d.icd_code LIKE '87%')  OR (d.icd_code LIKE '925%')  OR (d.icd_code LIKE '926%')  OR (d.icd_code LIKE '927%')  OR (d.icd_code LIKE '928%') OR (d.icd_code LIKE '929%'))
+WHERE (icu.los >= 2) AND ((d.icd_code LIKE '850%') OR (d.icd_code LIKE '851%') OR (d.icd_code LIKE '852%') OR (d.icd_code LIKE '853%') OR (d.icd_code LIKE '854%') OR (d.icd_code LIKE '959.01%'))
+
 ); -- Only take patients with records > 48h
 
 ---Creation of the vitals lookup table 
@@ -197,14 +196,14 @@ stay_id
 ,icu_intime
 ,EXTRACT(DAY FROM diff_chart_intime)*24    + EXTRACT(HOUR FROM diff_chart_intime) + case when  EXTRACT(MINUTE FROM diff_chart_intime) >=1 then 1 else 0 end as hour_from_intime -- number of hours from icu admitted time
 ,vital_name AS feature_name
-, avg(vital_reading) AS feature_mean_value
+, avg(vital_reading) AS feature_mean_value,  stddev(vital_reading) AS std 
 FROM icu_vital_data
 GROUP BY stay_id, icu_intime, hour_from_intime, feature_name
 )
 
-SELECT stay_id, icu_intime,  feature_name, feature_mean_value, hour_from_intime
+SELECT stay_id, icu_intime,  feature_name, feature_mean_value, hour_from_intime, std
 FROM aggregated
-GROUP BY stay_id, icu_intime, hour_from_intime, feature_name, feature_mean_value
+GROUP BY stay_id, icu_intime, hour_from_intime, feature_name, feature_mean_value, std
 ORDER BY stay_id, hour_from_intime;
 
 --- Data aggregation - 24 HOURS -------------------------------------------------------------------------------------------------------------
