@@ -404,7 +404,6 @@ class Preprocessing:
         df_std = self.df_hourly.pivot_table(index = ['stay_id', 'hour_from_intime'], columns = 'feature_name', values = 'std')
         df_std = df_std.reset_index(level=['hour_from_intime'])
         labels_std = df_std[df_std.hour_from_intime == 25][label].dropna()
-        
 
         self.df_hourly = self.df_hourly.pivot_table(index = ['stay_id', 'hour_from_intime'], columns = 'feature_name', values = 'feature_mean_value')
         self.df_24h = self.df_24h.pivot_table(index = ['stay_id', 'hour_from_intime'], columns = 'feature_name', values = 'feature_mean_value')
@@ -414,7 +413,9 @@ class Preprocessing:
         labels = self.df_hourly_copy[self.df_hourly_copy.hour_from_intime == 25][label]
         labels = labels.dropna()
         task2_cohort = labels.index.values
-        labels = labels.merge((labels_std))
+        labels = labels.to_frame()
+        labels_std = labels_std.to_frame()
+        test = labels.join(labels_std, on = 'stay_id', how='inner', lsuffix = '', rsuffix = ' std')
 
         ##Restriction of the cohort 
         self.df_hourly = self.df_hourly.reset_index(level=['stay_id'])
@@ -463,7 +464,7 @@ class Preprocessing:
             labels_severe = np.array([labels[i] for i in severe_idx])
             return data_pr, labels, data_mild, labels_mild, data_severe, labels_severe
 
-        return data_pr, labels
+        return data_pr, test
 
 
 

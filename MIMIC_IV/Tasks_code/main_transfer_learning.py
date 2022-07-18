@@ -43,12 +43,12 @@ if is_cuda:
 else:
     device = torch.device("cpu")
 print('Device', device)  
-def train(train_loader, dev_loader, test_loader, learn_rate, save = True, task = 'ABPd', hidden=512, layers= 49, EPOCHS=5, model_type="GRU", severe = ''):
+def train(train_loader, dev_loader, test_loader, learn_rate, save = True, task = 'ABPd', hidden=512, layers= 49, EPOCHS=5, model_type="GRU", severe = '', output_dim = 1):
     
     # Setting common hyperparameters
     input_dim = next(iter(train_loader))[0].shape[2]
+    print(output_dim)
     hidden_dim = hidden
-    output_dim = 1
     n_layers = layers
     # Instantiating the models
     if model_type == "GRU":
@@ -80,8 +80,9 @@ def train(train_loader, dev_loader, test_loader, learn_rate, save = True, task =
         for x, train_label in train_loader:
             counter += 1
             h = h.data
+            print('train')
             model.zero_grad()
-            x = x + (0.1**0.5)*torch.randn(x.shape)
+            # x = x + (0.1**0.5)*torch.randn(x.shape)
             y_pred, h = model(x.to(device).float(), h)
             y_pred = torch.squeeze(y_pred)
             y_pred_col.append(y_pred)
@@ -118,7 +119,7 @@ def train(train_loader, dev_loader, test_loader, learn_rate, save = True, task =
             h = h.data
             y_pred, h = model(dev_data.to(device).float(), h)
             y_pred = torch.squeeze(y_pred)
-            
+            print('dev')
             # Save predict and label
             pred.append(y_pred)
             label.append(dev_label)
@@ -145,7 +146,8 @@ def train(train_loader, dev_loader, test_loader, learn_rate, save = True, task =
             
             # Forward pass : Compute predicted y by passing train data to the model
             h = h.data
-
+            print(h.shape)
+            print(test_data.shape)
             y_pred, h = model(test_data.to(device).float(), h)
             y_pred = torch.squeeze(y_pred)
             
@@ -176,9 +178,11 @@ def train(train_loader, dev_loader, test_loader, learn_rate, save = True, task =
         pred = np.asarray(pred)
         label = np.asarray(label)
         
-        auc_score = mean_absolute_error(label, pred)
-        print("Epoch: {} Train loss: {:.4f}, Dev loss: {:.4f}, Test loss: {:.4f}, Test MAE: {:.4f}".format(
-            epoch, train_loss, dev_loss, test_loss, auc_score))
+        mae_1 = mean_absolute_error(label[0], pred[0])
+        mae_2 = mean_absolute_error(label[1], pred[1])
+
+        print("Epoch: {} Train loss: {:.4f}, Dev loss: {:.4f}, Test loss: {:.4f}, Test MAE : {:.4f}, Test MAE (std) : {:.4f}".format(
+            epoch, train_loss, dev_loss, test_loss, mae_1, mae_2))
         ep_dev_loss.append(dev_loss)
         ep_train_loss.append(train_loss)
     
@@ -220,9 +224,12 @@ pr_TBI = Preprocessing(df_hourly, df_24h, df_48h, df_med, df_demographic, nb_hou
 
 if task == 'std':
     data, labels = pr.std_pr(lb, transfer=False)
-    sys.exit()
-    X_train, X_test, y_train, y_test = train_test_split(final_data, labels, test_size=0.2, shuffle = True, random_state=random_state)
+    data = np.transpose(data, (0,2,1))
+    print(data.shape)
+    labels_2 = np.array(labels.to_numpy())
+    X_train, X_test, y_train, y_test = train_test_split(data, labels_2, test_size=0.2, shuffle = True, random_state=random_state)
     X_train, X_val, y_train, y_val  = train_test_split(X_train, y_train, test_size=0.25, random_state=random_state)
+
 
     train_data = TensorDataset(torch.from_numpy(X_train), torch.from_numpy(y_train))
     train_loader = DataLoader(train_data, shuffle=True, batch_size=batch_size, drop_last=True)
@@ -232,9 +239,9 @@ if task == 'std':
 
     test_data = TensorDataset(torch.from_numpy(X_test), torch.from_numpy(y_test))
     test_loader = DataLoader(test_data, shuffle=True, batch_size=batch_size, drop_last=True)
-    pretrained_model = train(train_loader, dev_loader, test_loader, learn_rate = lr, hidden=512, layers= 49, task = lb, save = True, model_type="GRU", EPOCHS = n_epochs, severe = '')
+    pretrained_model = train(train_loader, dev_loader, test_loader, learn_rate = lr, hidden=16, layers=1, task = lb, save = True, model_type="GRU", EPOCHS = n_epochs, severe = '', output_dim = 2)
 
-if task == 'augmentation':
+elif task == 'augmentation':
 
     # data, labels, data_mild, labels_mild, data_severe, labels_severe = pr.time_series_pr(lb, transfer=True)
 
