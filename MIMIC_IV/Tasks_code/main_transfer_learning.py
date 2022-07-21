@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from sklearn.metrics import roc_auc_score, mean_absolute_error
+from sklearn.metrics import roc_auc_score, mean_absolute_error, mean_squared_error
 import GRU
 from VAE import VAE
 import pandas as pd 
@@ -33,7 +33,7 @@ n_epochs = 10
 batch_size = 16
 lb = 'ABPd'
 is_cuda = torch.cuda.is_available()
-task = 'std' #augmentation or cohort split
+task = 'augmentation' #augmentation or cohort split
 
 
 
@@ -180,9 +180,12 @@ def train(train_loader, dev_loader, test_loader, learn_rate, save = True, task =
         
         mae_1 = mean_absolute_error(label[0], pred[0])
         mae_2 = mean_absolute_error(label[1], pred[1])
-
+        rmse_1 = np.sqrt(mean_squared_error(label[0], pred[0]))
+        rmse_2 = np.sqrt(mean_squared_error(label[1], pred[1]))
         print("Epoch: {} Train loss: {:.4f}, Dev loss: {:.4f}, Test loss: {:.4f}, Test MAE : {:.4f}, Test MAE (std) : {:.4f}".format(
             epoch, train_loss, dev_loss, test_loss, mae_1, mae_2))
+        print("Epoch: {} Test RMSE: {:.4f}, Std test RMSE: {:.4f}".format(
+            epoch, rmse_1, rmse_2))
         ep_dev_loss.append(dev_loss)
         ep_train_loss.append(train_loss)
     
@@ -203,26 +206,69 @@ def train(train_loader, dev_loader, test_loader, learn_rate, save = True, task =
 
 
 ##data loading 
-df_hourly_augmented = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_hour_augmented.csv', delimiter=',')
 df_24h = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_24hour.csv', delimiter=',')
 df_48h = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_48hour.csv', delimiter=',')
 df_med = pd.read_csv(r"C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_med.csv", delimiter=',')
 df_demographic_augmented = pd.read_csv(r"C:\Users\USER\OneDrive\Summer_project\Azure\data\demographics_mimic4_augmented.csv", delimiter=',')
-df_hourly = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_hour_std.csv', delimiter=',')
 df_demographic = pd.read_csv(r"C:\Users\USER\OneDrive\Summer_project\Azure\data\demographics_mimic4.csv", delimiter=',')
 
+if task in ['std', 'std_augmented']:
+    df_hourly = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_hour_std.csv', delimiter=',')
+    df_hourly_augmented = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_hour_augmented_std.csv', delimiter=',')
+else: 
+    df_hourly = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_hour.csv', delimiter=',')
+    df_hourly_augmented = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_hour_augmented.csv', delimiter=',')
 
-features = pd.read_csv(r'MIMIC_IV\resources\features_reg.csv', header = None)
-features = features.loc[:416,1] 
+# features = pd.read_csv(r'MIMIC_IV\resources\features_reg.csv', header = None)
+# features = features.loc[:416,1] 
 
-pr = Preprocessing(df_hourly, df_24h, df_48h, df_med, df_demographic, nb_hours, TBI_split, random_state, imputation)
+pr = Preprocessing(df_hourly_augmented, df_24h, df_48h, df_med, df_demographic_augmented, nb_hours, TBI_split, random_state, imputation)
 pr_TBI = Preprocessing(df_hourly, df_24h, df_48h, df_med, df_demographic, nb_hours, TBI_split, random_state, imputation)
 
 
 
 ###############################################################################
+if task == 'std_augmented':
+    data, labels = pr.std_pr(lb, transfer=False)
+    data_TBI, labels_TBI = pr_TBI.std_pr(lb, transfer=False)
+    
+    final_data_TBI = np.array(data_TBI)
+    final_data_TBI = np.transpose(final_data_TBI, (0,2,1))
+    data = np.transpose(data, (0,2,1))
+    
+    labels_2 = np.array(labels.to_numpy())
+    X_train, X_test, y_train, y_test = train_test_split(data, labels_2, test_size=0.2, shuffle = True, random_state=random_state)
+    X_train, X_val, y_train, y_val  = train_test_split(X_train, y_train, test_size=0.25, random_state=random_state)
+
+
+    train_data = TensorDataset(torch.from_numpy(X_train), torch.from_numpy(y_train))
+    train_loader = DataLoader(train_data, shuffle=True, batch_size=batch_size, drop_last=True)
+
+    dev_data = TensorDataset(torch.from_numpy(X_val), torch.from_numpy(y_val))
+    dev_loader = DataLoader(dev_data, shuffle=True, batch_size=batch_size, drop_last=True)
+
+    test_data = TensorDataset(torch.from_numpy(X_test), torch.from_numpy(y_test))
+    test_loader = DataLoader(test_data, shuffle=True, batch_size=batch_size, drop_last=True)
+
+    print('Pretraining with the whole dataset')
+    pretrained_model = train(train_loader, dev_loader, test_loader, learn_rate = lr, hidden=512, layers=49, task = lb, save = True, model_type="GRU", EPOCHS = n_epochs, severe = '', output_dim = 2)
+
+    print('Finetuning for TBI cohort')
+    X_train, X_test, y_train, y_test = train_test_split(final_data_TBI, labels_TBI, test_size=0.2, shuffle = True, random_state=random_state)
+    X_train, X_val, y_train, y_val  = train_test_split(X_train, y_train, test_size=0.25, random_state=random_state)
+
+    train_data = TensorDataset(torch.from_numpy(X_train), torch.from_numpy(y_train))
+    train_loader = DataLoader(train_data, shuffle=True, batch_size=batch_size, drop_last=True)
+
+    dev_data = TensorDataset(torch.from_numpy(X_val), torch.from_numpy(y_val))
+    dev_loader = DataLoader(dev_data, shuffle=True, batch_size=batch_size, drop_last=True)
+
+    test_data = TensorDataset(torch.from_numpy(X_test), torch.from_numpy(y_test))
+    test_loader = DataLoader(test_data, shuffle=True, batch_size=batch_size, drop_last=True)
+    pretrained_model = train(train_loader, dev_loader, test_loader, learn_rate = lr, hidden=512, layers= 49, task = lb, save = True, model_type="GRU", EPOCHS = n_epochs, severe = '')
 
 if task == 'std':
+
     data, labels = pr.std_pr(lb, transfer=False)
     data = np.transpose(data, (0,2,1))
     print(data.shape)
@@ -247,7 +293,6 @@ elif task == 'augmentation':
 
     data, labels = pr.time_series_pr(lb, transfer=False)
     data_TBI, labels_TBI = pr_TBI.time_series_pr(lb, transfer=False)
-
     test_labels = np.transpose(np.array([[labels]*24]), (2,0,1))
 
     final_data = np.array(data)
@@ -255,8 +300,8 @@ elif task == 'augmentation':
 
     concatenated_data = np.concatenate((final_data, test_labels), 1)
 
-    # da = DataAugmentation(True, concatenated_data, random_state)
-    # da.augment_VAE(450,16,0.003)
+    da = DataAugmentation(True, concatenated_data, random_state)
+    # da.augment_VAE(50,16,0.003)
 
     # da = DataAugmentation(True, concatenated_data, random_state)
     # vae = VAE(concatenated_data.shape[2]*concatenated_data.shape[1])
@@ -266,9 +311,10 @@ elif task == 'augmentation':
     # with open('VAE_model.pkl', 'wb') as outp:
     #     pickle.dump(model, outp, pickle.HIGHEST_PROTOCOL)
 
-    with open('VAE_model.pkl', 'rb') as inp:
+    with open('MIMIC_IV\Tasks_code\VAE_model.pkl', 'rb') as inp:
         model = pickle.load(inp)
 
+    da.show_reconstruct(16, model)
     n_samples = 1000
     latent_dim = 20
     z = torch.randn(n_samples, latent_dim).to(device)
@@ -278,18 +324,20 @@ elif task == 'augmentation':
         samples = samples.cpu()
 
     new_samples = samples.reshape((n_samples, concatenated_data.shape[1], -1)).detach().numpy()[:,0:-1,:]
+    print(new_samples.shape)
     new_labels = new_samples[:,-1,:]
     new_labels = new_labels[:,0]
-    # plt.figure()
-    # plt.plot(range(24), samples[12][3])
-    # plt.show()
-
+    print(new_samples.shape)
+    plt.figure()
+    plt.plot(range(24), new_samples[12][3])
+    plt.show()
+    np.save('new_samples_vae.npy', new_samples)
     final_data = np.concatenate((new_samples, final_data))
     print(final_data.shape)
     labels = np.concatenate((new_labels, labels))
     final_data_TBI = np.array(data_TBI)
     final_data_TBI = np.transpose(final_data_TBI, (0,2,1))
-
+    # np.save('final_data_TBI.npy', final_data_TBI)
     print('Pretraining with the augmented dataset')
     #Pretraining with the whole dataset 
     X_train, X_test, y_train, y_test = train_test_split(final_data, labels, test_size=0.2, shuffle = True, random_state=random_state)
