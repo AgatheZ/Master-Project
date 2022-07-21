@@ -256,7 +256,7 @@ class Preprocessing:
         ##create batches 
         batch_hourly = self.create_batchs(self.df_hourly)
         batch_demographic = self.create_batchs(self.df_demographic)
-
+        np.save('batch_dem.npy', batch_demographic)
         ##reindex for patients that don't have entries at the begginning of their stays + cut to 48h
         ##aggregation as well
         data_pr = []
@@ -403,6 +403,7 @@ class Preprocessing:
         ##pivot the tables 
         df_std = self.df_hourly.pivot_table(index = ['stay_id', 'hour_from_intime'], columns = 'feature_name', values = 'std')
         df_std = df_std.reset_index(level=['hour_from_intime'])
+
         labels_std = df_std[df_std.hour_from_intime == 25][label].dropna()
 
         self.df_hourly = self.df_hourly.pivot_table(index = ['stay_id', 'hour_from_intime'], columns = 'feature_name', values = 'feature_mean_value')

@@ -143,8 +143,8 @@ class DataAugmentation:
 
 
         plt.figure()
-        plt.plot(range(24), recon_batch_resized[12][3])
-        plt.plot(range(24), initial_batch_resized[12][3])
+        plt.plot(range(24), recon_batch_resized[12][2])
+        plt.plot(range(24), initial_batch_resized[12][2])
         plt.title('Reconstruction of the heart rate')
         plt.xlabel('Hours')
         plt.ylabel('Heart rate (bpm)')

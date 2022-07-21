@@ -78,7 +78,7 @@ LEFT JOIN  mimic_icu.icustays icu
 ON vit.stay_id = icu.stay_id
 JOIN mimiciv.lookup lk
 ON vit.vital_name = lk.vital_name
-WHERE lk.aggregation = '1' AND icu.los >= 1.04
+WHERE lk.aggregation = '1' AND icu.los >= 2
 
 
 ) , 
@@ -92,14 +92,14 @@ stay_id
 ,icu_intime
 ,EXTRACT(DAY FROM diff_chart_intime)*24    + EXTRACT(HOUR FROM diff_chart_intime) + case when  EXTRACT(MINUTE FROM diff_chart_intime) >=1 then 1 else 0 end as hour_from_intime -- number of hours from icu admitted time
 ,vital_name AS feature_name
-, avg(vital_reading) AS feature_mean_value
+, avg(vital_reading) AS feature_mean_value,  stddev(vital_reading) AS std 
 FROM icu_vital_data
 GROUP BY stay_id, icu_intime, hour_from_intime, feature_name
 )
 
-SELECT stay_id, icu_intime,  feature_name, feature_mean_value, hour_from_intime
+SELECT stay_id, icu_intime,  feature_name, feature_mean_value, hour_from_intime, std
 FROM aggregated
-GROUP BY stay_id, icu_intime, hour_from_intime, feature_name, feature_mean_value
+GROUP BY stay_id, icu_intime, hour_from_intime, feature_name, feature_mean_value, std
 ORDER BY stay_id, hour_from_intime;
 
 
