@@ -33,7 +33,7 @@ n_epochs = 10
 batch_size = 16
 lb = 'ABPd'
 is_cuda = torch.cuda.is_available()
-task = 'augmentation' #augmentation or cohort split
+task = 'std_augmented' #augmentation or cohort split
 
 
 
@@ -80,7 +80,6 @@ def train(train_loader, dev_loader, test_loader, learn_rate, save = True, task =
         for x, train_label in train_loader:
             counter += 1
             h = h.data
-            print('train')
             model.zero_grad()
             # x = x + (0.1**0.5)*torch.randn(x.shape)
             y_pred, h = model(x.to(device).float(), h)
@@ -119,7 +118,6 @@ def train(train_loader, dev_loader, test_loader, learn_rate, save = True, task =
             h = h.data
             y_pred, h = model(dev_data.to(device).float(), h)
             y_pred = torch.squeeze(y_pred)
-            print('dev')
             # Save predict and label
             pred.append(y_pred)
             label.append(dev_label)
@@ -235,7 +233,7 @@ if task == 'std_augmented':
     final_data_TBI = np.array(data_TBI)
     final_data_TBI = np.transpose(final_data_TBI, (0,2,1))
     data = np.transpose(data, (0,2,1))
-    
+    print(data.shape)
     labels_2 = np.array(labels.to_numpy())
     X_train, X_test, y_train, y_test = train_test_split(data, labels_2, test_size=0.2, shuffle = True, random_state=random_state)
     X_train, X_val, y_train, y_val  = train_test_split(X_train, y_train, test_size=0.25, random_state=random_state)
