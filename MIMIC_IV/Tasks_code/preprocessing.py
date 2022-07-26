@@ -4,7 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt 
 from matplotlib.pyplot import cm
 from sklearn.preprocessing import normalize
-
+import sys 
 import seaborn as sns
 from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import IterativeImputer
@@ -403,7 +403,6 @@ class Preprocessing:
         ##pivot the tables 
         df_std = self.df_hourly.pivot_table(index = ['stay_id', 'hour_from_intime'], columns = 'feature_name', values = 'std')
         df_std = df_std.reset_index(level=['hour_from_intime'])
-
         labels_std = df_std[df_std.hour_from_intime == 25][label].dropna()
 
         self.df_hourly = self.df_hourly.pivot_table(index = ['stay_id', 'hour_from_intime'], columns = 'feature_name', values = 'feature_mean_value')
@@ -420,28 +419,37 @@ class Preprocessing:
 
         ##Restriction of the cohort 
         self.df_hourly = self.df_hourly.reset_index(level=['stay_id'])
+        df_std = df_std.reset_index(level=['stay_id'])
+
         self.df_hourly = self.df_hourly[self.df_hourly['stay_id'].isin(task2_cohort)]
         self.df_demographic = self.df_demographic[self.df_demographic['stay_id'].isin(task2_cohort)]
 
+        df_std = df_std[df_std['stay_id'].isin(task2_cohort)]
+
         self.df_demographic.gender[self.df_demographic.gender == 'F'] = 1
         self.df_demographic.gender[self.df_demographic.gender == 'M'] = 0
-        
+        df_std = df_std.fillna(0)
+  
         ##create batches 
         batch_hourly = self.create_batchs(self.df_hourly)
         batch_demographic = self.create_batchs(self.df_demographic)
-
+        batch_std = self.create_batchs(df_std)
         ##reindex for patients that don't have entries at the begginning of their stays + cut to 48h
         ##aggregation as well
         data_pr = []
         for i in range(len(batch_demographic)):
             batch_hourly[i] = batch_hourly[i].reindex(range(1, self.nb_hours + 1), fill_value = None)
-            
+            batch_std[i] = batch_std[i].reindex(range(1, self.nb_hours + 1), fill_value = None)
+            batch_std[i] = batch_std[i].fillna(0)
             batch_demographic[i] = batch_demographic[i].reindex(range(1, self.nb_hours + 1), fill_value = None)
             batch_demographic[i] = batch_demographic[i].fillna(batch_demographic[i].mean())
             batch_hourly[i] = batch_hourly[i].drop(columns = 'stay_id')
+            batch_std[i] = batch_std[i].drop(columns = 'stay_id')
+
             batch_demographic[i] = batch_demographic[i].drop(columns = 'stay_id')
-            data_pr.append(pd.concat([batch_hourly[i], batch_demographic[i]], axis=1))
+            data_pr.append(pd.concat([batch_hourly[i], batch_std[i], batch_demographic[i]], axis=1))
         
+     
         #divide between severe and mild
         if transfer:
             dem = self.df_demographic.drop(columns = 'stay_id').reset_index(drop=True)
@@ -455,6 +463,7 @@ class Preprocessing:
         for i in range(len(batch_hourly)):
                 data_pr[i] = data_pr[i].fillna(method = "ffill")
                 data_pr[i] = data_pr[i].fillna(mean)
+                data_pr[i] = data_pr[i].fillna(0)
 
         
 
