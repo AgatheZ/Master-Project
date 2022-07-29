@@ -33,7 +33,7 @@ n_epochs = 10
 batch_size = 16
 lb = 'ABPd'
 is_cuda = torch.cuda.is_available()
-task = 'std_augmented' #augmentation or cohort split
+task = 'pressure_experiment' #augmentation or cohort split
 
 
 
@@ -210,7 +210,7 @@ df_med = pd.read_csv(r"C:\Users\USER\OneDrive\Summer_project\Azure\data\preproce
 df_demographic_augmented = pd.read_csv(r"C:\Users\USER\OneDrive\Summer_project\Azure\data\demographics_mimic4_augmented.csv", delimiter=',')
 df_demographic = pd.read_csv(r"C:\Users\USER\OneDrive\Summer_project\Azure\data\demographics_mimic4.csv", delimiter=',')
 
-if task in ['std', 'std_augmented']:
+if task in ['std', 'std_augmented', 'pressure_experiment']:
     df_hourly = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_hour_std.csv', delimiter=',')
     df_hourly_augmented = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_hour_augmented_std.csv', delimiter=',')
 else: 
@@ -226,8 +226,47 @@ pr_TBI = Preprocessing(df_hourly, df_24h, df_48h, df_med, df_demographic, nb_hou
 
 
 ###############################################################################
+if task == 'pressure_experiment':
+    data, labels = pr.exp_pr(lb, transfer=False, window = 3)
+    data_TBI, labels_TBI = pr_TBI.exp_pr(lb, transfer=False)
+    
+    final_data_TBI = np.array(data_TBI)
+    final_data_TBI = np.transpose(final_data_TBI, (0,2,1))
+    data = np.transpose(data, (0,2,1))
+    print(data.shape)
+
+    labels_2 = np.array(labels.to_numpy())
+    X_train, X_test, y_train, y_test = train_test_split(data, labels_2, test_size=0.2, shuffle = True, random_state=random_state)
+    X_train, X_val, y_train, y_val  = train_test_split(X_train, y_train, test_size=0.25, random_state=random_state)
+
+    train_data = TensorDataset(torch.from_numpy(X_train), torch.from_numpy(y_train))
+    train_loader = DataLoader(train_data, shuffle=True, batch_size=batch_size, drop_last=True)
+
+    dev_data = TensorDataset(torch.from_numpy(X_val), torch.from_numpy(y_val))
+    dev_loader = DataLoader(dev_data, shuffle=True, batch_size=batch_size, drop_last=True)
+
+    test_data = TensorDataset(torch.from_numpy(X_test), torch.from_numpy(y_test))
+    test_loader = DataLoader(test_data, shuffle=True, batch_size=batch_size, drop_last=True)
+
+    print('Pretraining with the whole dataset')
+    pretrained_model = train(train_loader, dev_loader, test_loader, learn_rate = lr, hidden=512, layers=49, task = lb, save = True, model_type="GRU", EPOCHS = n_epochs, severe = '', output_dim = 2)
+
+    print('Finetuning for TBI cohort')
+    X_train, X_test, y_train, y_test = train_test_split(final_data_TBI, labels_TBI, test_size=0.2, shuffle = True, random_state=random_state)
+    X_train, X_val, y_train, y_val  = train_test_split(X_train, y_train, test_size=0.25, random_state=random_state)
+
+    train_data = TensorDataset(torch.from_numpy(X_train), torch.from_numpy(y_train))
+    train_loader = DataLoader(train_data, shuffle=True, batch_size=batch_size, drop_last=True)
+
+    dev_data = TensorDataset(torch.from_numpy(X_val), torch.from_numpy(y_val))
+    dev_loader = DataLoader(dev_data, shuffle=True, batch_size=batch_size, drop_last=True)
+
+    test_data = TensorDataset(torch.from_numpy(X_test), torch.from_numpy(y_test))
+    test_loader = DataLoader(test_data, shuffle=True, batch_size=batch_size, drop_last=True)
+    pretrained_model = train(train_loader, dev_loader, test_loader, learn_rate = lr, hidden=512, layers= 49, task = lb, save = True, model_type="GRU", EPOCHS = n_epochs, severe = '')
+
 if task == 'std_augmented':
-    data, labels = pr.std_pr(lb, transfer=False)
+    data, labels = pr.std_pr(lb, transfer=False, window = 3)
     data_TBI, labels_TBI = pr_TBI.std_pr(lb, transfer=False)
     
     final_data_TBI = np.array(data_TBI)

@@ -61,7 +61,13 @@ DROP TABLE IF EXISTS mimiciv.cohort_med;
 CREATE TABLE mimiciv.cohort_med
 AS
 
-SELECT tbi.stay_id, fl.abbreviation as med_name, inpt.amount
+
+
+(
+WITH FULL_MED
+AS
+(
+SELECT tbi.stay_id, fl.abbreviation as med_name, inpt.amount, inpt.starttime - icu.intime as diff_chart_intime
 FROM mimic_icu.inputevents inpt
 JOIN mimic_icu.d_items fl 
 ON fl.itemid = inpt.itemid
@@ -69,6 +75,23 @@ JOIN mimiciv.lookup lk
 ON lk.vital_name = fl.abbreviation
 JOIN mimiciv.tbi tbi ON
 inpt.stay_id = tbi.stay_id
+JOIN  mimic_icu.icustays icu
+ON tbi.stay_id = icu.stay_id
+)
+
+,MED_INTERMEDIATE 
+AS
+(
+SELECT stay_id, med_name, amount, EXTRACT(DAY FROM diff_chart_intime)*24    + EXTRACT(HOUR FROM diff_chart_intime) + case when  EXTRACT(MINUTE FROM diff_chart_intime) >=1 then 1 else 0 end as hour_from_intime
+FROM FULL_MED
+)
+
+SELECT stay_id, med_name, amount, hour_from_intime
+FROM MED_INTERMEDIATE
+
+)
+;
+
 ;
 
 
@@ -241,15 +264,16 @@ stay_id
 ,icu_intime
 ,EXTRACT(DAY FROM diff_chart_intime)    + case when  EXTRACT(HOUR FROM diff_chart_intime) >=1 then 1 else 0 end as hour_from_intime -- number of hours from icu admitted time
 ,vital_name AS feature_name
-, avg(vital_reading) AS feature_mean_value
+, avg(vital_reading) AS feature_mean_value, stddev(vital_reading) AS std 
 FROM icu_vital_data
 GROUP BY stay_id, icu_intime, hour_from_intime, feature_name
 )
 
-SELECT stay_id, icu_intime,  feature_name, feature_mean_value, hour_from_intime
+SELECT stay_id, icu_intime,  feature_name, feature_mean_value, hour_from_intime, std
 FROM aggregated
-GROUP BY stay_id, icu_intime, hour_from_intime, feature_name, feature_mean_value
+GROUP BY stay_id, icu_intime, hour_from_intime, feature_name, feature_mean_value, std
 ORDER BY stay_id, hour_from_intime;
+
 
 
 ---Get demographic table 

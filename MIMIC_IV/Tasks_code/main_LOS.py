@@ -30,8 +30,8 @@ TBI_split = False
 tuning = False
 SHAP = False
 imputation = 'No'
-model_name = 'LightGBM'
-threshold = 10
+model_name = 'XGBoost'
+threshold = 4
 
 assert model_name in ['RF', 'XGBoost', 'LightGBM', 'Stacking'], "Please specify a valid model name"
 assert imputation in ['No', 'carry_forward', 'linear', 'multivariate'], "Please specify a valid imputation method"
@@ -84,7 +84,7 @@ if tuning:
    best_param = xgboost_hyp_tuning.hyperopt()
 
 # final models evaluation using 5-fold cross validation  
-counter = Counter(labels)
+counter = Counter(labels_severe)
 print(counter)
 # estimate scale_pos_weight value
 estimate = counter[0] / counter[1]
@@ -93,6 +93,7 @@ if model_name == 'XGBoost':
    if TBI_split:
       best_param_mild = {'alpha': 0.0, 'colsample_bytree': 0.5404929749427543, 'eta': 0.08602706957522405, 'gamma': 1.8786165006154019, 'max_depth': 17.0, 'min_child_weight': 3.0}
       best_param_severe = {'alpha': 13.0, 'colsample_bytree': 0.6268493181974919, 'eta': 0.03821439650403947, 'gamma': 0.4555031107284915, 'max_depth': 15.0, 'min_child_weight': 10.0}
+      best_param = best_param_severe
    else:
       if nb_hours == 24:
          best_param = {'alpha': 4.0, 'colsample_bytree': 0.6247402571982401, 'eta': 0.36200417198604184, 'gamma': 1.55002501704347, 'max_depth': 4.0, 'min_child_weight': 1.0}
@@ -112,6 +113,7 @@ if model_name == 'XGBoost':
 
                         min_child_weight=(best_param['min_child_weight']),
                         colsample_bytree=best_param['colsample_bytree'])
+   model =  XGBClassifier()
 
 if model_name == 'RF':
    best_param = {'criterion': 'gini', 'max_features': 'sqrt', 'max_depth': 9.0, 'n_estimators': 500}
@@ -139,7 +141,7 @@ if model_name == 'Stacking':
 
 #fits and evaluates the model
 if TBI_split:
-   eval = Evaluation(False, model, 'Tuned ' + model_name, final_data, labels, random_state, SHAP, features, nb_hours, severity = '', threshold = threshold)
+   eval = Evaluation(False, model, 'Tuned ' + model_name, final_data_severe, labels_severe, random_state, SHAP, features, nb_hours, severity = '', threshold = threshold)
    eval.evaluate()
 else:
    eval = Evaluation(False, model, 'Tuned ' + model_name, final_data, labels, random_state, SHAP, features, nb_hours, severity = '', threshold = threshold)
