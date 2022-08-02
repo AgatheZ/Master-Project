@@ -29,11 +29,11 @@ imputation = 'carry_forward'
 model_name = 'Stacking'
 lr = 0.001
 learning_rate_decay = 7 
-n_epochs = 10
+n_epochs = 1
 batch_size = 16
 lb = 'ABPd'
 is_cuda = torch.cuda.is_available()
-task = 'pressure_experiment' #augmentation or cohort split
+task = 'std' #augmentation or cohort split
 
 
 
