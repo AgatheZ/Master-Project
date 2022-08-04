@@ -31,9 +31,9 @@ lr = 0.001
 learning_rate_decay = 7 
 n_epochs = 1
 batch_size = 16
-lb = 'ABPd'
+lb = 'ABPm'
 is_cuda = torch.cuda.is_available()
-task = 'std' #augmentation or cohort split
+task = 'pressure_experiment' #augmentation or cohort split
 
 
 
