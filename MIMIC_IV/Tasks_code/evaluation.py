@@ -75,7 +75,7 @@ class Evaluation:
         shaps_values = list()
         test_idx = list()
         mean_fpr = np.linspace(0, 1, 50)
-        skf = StratifiedKFold(n_splits=5, random_state= self.random_state, shuffle=True)
+        skf = KFold(n_splits=5, random_state= self.random_state, shuffle=True)
         for train_index, test_index in skf.split(self.X, self.y):
             X_train, X_test = self.X[train_index], self.X[test_index]
             y_train, y_test = self.y[train_index], self.y[test_index]

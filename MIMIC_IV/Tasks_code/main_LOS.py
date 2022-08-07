@@ -17,6 +17,7 @@ import lightgbm as lgb
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt 
 import seaborn as sns
+import sys
 
 # Generate and plot a synthetic imbalanced classification dataset
 from collections import Counter
@@ -30,19 +31,21 @@ TBI_split = False
 tuning = False
 SHAP = False
 imputation = 'No'
-model_name = 'LightGBM'
-threshold = 10
+model_name = 'XGBoost'
+threshold = 4
 
 assert model_name in ['RF', 'XGBoost', 'LightGBM', 'Stacking'], "Please specify a valid model name"
 assert imputation in ['No', 'carry_forward', 'linear', 'multivariate'], "Please specify a valid imputation method"
 
 ##data loading 
-df_hourly = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_hour.csv', delimiter=',')
-df_24h = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_24hour.csv', delimiter=',')
-df_48h = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_48hour.csv', delimiter=',')
-df_med = pd.read_csv(r"C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_med.csv", delimiter=',')
-df_demographic = pd.read_csv(r"C:\Users\USER\OneDrive\Summer_project\Azure\data\demographics_mimic4.csv", delimiter=',')
+df_hourly = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_hour_std.csv', delimiter=',').sort_values(by=['stay_id'])
+df_24h = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_24hour.csv', delimiter=',').sort_values(by=['stay_id'])
+df_48h = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_48hour.csv', delimiter=',').sort_values(by=['stay_id'])
+df_med = pd.read_csv(r"C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_med.csv", delimiter=',').sort_values(by=['stay_id'])
+df_demographic = pd.read_csv(r"C:\Users\USER\OneDrive\Summer_project\Azure\data\demographics_mimic4.csv", delimiter=',').sort_values(by=['stay_id'])
 features = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\Master-Project\MIMIC_IV\resources\features.csv', header = None)
+diag = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\mimiciv_diag.csv')
+
 
 
 print('Data Loading - done')
@@ -54,7 +57,7 @@ else:
 
 
 #Preprocessing
-pr = Preprocessing(df_hourly, df_24h, df_48h, df_med, df_demographic, nb_hours, TBI_split, random_state, imputation)
+pr = Preprocessing(df_hourly, df_24h, df_48h, df_med, df_demographic, nb_hours, TBI_split, random_state, imputation, diag)
 
 if TBI_split:
    final_data_mild, final_data_severe, labels_mild, labels_severe = pr.preprocess_data(threshold)
@@ -77,6 +80,8 @@ else:
    X_train, X_val, y_train, y_val  = train_test_split(X_train, y_train, test_size=0.25, random_state=random_state)
 
 print(X_train.shape)
+print(y_train.shape)
+
 # #hyperparameter tuning 
 
 if tuning:
@@ -93,6 +98,7 @@ if model_name == 'XGBoost':
    if TBI_split:
       best_param_mild = {'alpha': 0.0, 'colsample_bytree': 0.5404929749427543, 'eta': 0.08602706957522405, 'gamma': 1.8786165006154019, 'max_depth': 17.0, 'min_child_weight': 3.0}
       best_param_severe = {'alpha': 13.0, 'colsample_bytree': 0.6268493181974919, 'eta': 0.03821439650403947, 'gamma': 0.4555031107284915, 'max_depth': 15.0, 'min_child_weight': 10.0}
+      best_param = best_param_severe
    else:
       if nb_hours == 24:
          best_param = {'alpha': 4.0, 'colsample_bytree': 0.6247402571982401, 'eta': 0.36200417198604184, 'gamma': 1.55002501704347, 'max_depth': 4.0, 'min_child_weight': 1.0}
@@ -112,6 +118,7 @@ if model_name == 'XGBoost':
 
                         min_child_weight=(best_param['min_child_weight']),
                         colsample_bytree=best_param['colsample_bytree'])
+   # model =  XGBClassifier()
 
 if model_name == 'RF':
    best_param = {'criterion': 'gini', 'max_features': 'sqrt', 'max_depth': 9.0, 'n_estimators': 500}
@@ -139,7 +146,7 @@ if model_name == 'Stacking':
 
 #fits and evaluates the model
 if TBI_split:
-   eval = Evaluation(False, model, 'Tuned ' + model_name, final_data, labels, random_state, SHAP, features, nb_hours, severity = '', threshold = threshold)
+   eval = Evaluation(False, model, 'Tuned ' + model_name, final_data_severe, labels_severe, random_state, SHAP, features, nb_hours, severity = '', threshold = threshold)
    eval.evaluate()
 else:
    eval = Evaluation(False, model, 'Tuned ' + model_name, final_data, labels, random_state, SHAP, features, nb_hours, severity = '', threshold = threshold)
