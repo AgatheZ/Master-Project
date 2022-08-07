@@ -17,6 +17,7 @@ import lightgbm as lgb
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt 
 import seaborn as sns
+import sys
 
 # Generate and plot a synthetic imbalanced classification dataset
 from collections import Counter
@@ -37,12 +38,14 @@ assert model_name in ['RF', 'XGBoost', 'LightGBM', 'Stacking'], "Please specify 
 assert imputation in ['No', 'carry_forward', 'linear', 'multivariate'], "Please specify a valid imputation method"
 
 ##data loading 
-df_hourly = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_hour.csv', delimiter=',')
-df_24h = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_24hour.csv', delimiter=',')
-df_48h = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_48hour.csv', delimiter=',')
-df_med = pd.read_csv(r"C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_med.csv", delimiter=',')
-df_demographic = pd.read_csv(r"C:\Users\USER\OneDrive\Summer_project\Azure\data\demographics_mimic4.csv", delimiter=',')
+df_hourly = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_hour_std.csv', delimiter=',').sort_values(by=['stay_id'])
+df_24h = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_24hour.csv', delimiter=',').sort_values(by=['stay_id'])
+df_48h = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_48hour.csv', delimiter=',').sort_values(by=['stay_id'])
+df_med = pd.read_csv(r"C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_med.csv", delimiter=',').sort_values(by=['stay_id'])
+df_demographic = pd.read_csv(r"C:\Users\USER\OneDrive\Summer_project\Azure\data\demographics_mimic4.csv", delimiter=',').sort_values(by=['stay_id'])
 features = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\Master-Project\MIMIC_IV\resources\features.csv', header = None)
+diag = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\mimiciv_diag.csv')
+
 
 
 print('Data Loading - done')
@@ -54,7 +57,7 @@ else:
 
 
 #Preprocessing
-pr = Preprocessing(df_hourly, df_24h, df_48h, df_med, df_demographic, nb_hours, TBI_split, random_state, imputation)
+pr = Preprocessing(df_hourly, df_24h, df_48h, df_med, df_demographic, nb_hours, TBI_split, random_state, imputation, diag)
 
 if TBI_split:
    final_data_mild, final_data_severe, labels_mild, labels_severe = pr.preprocess_data(threshold)
@@ -77,6 +80,8 @@ else:
    X_train, X_val, y_train, y_val  = train_test_split(X_train, y_train, test_size=0.25, random_state=random_state)
 
 print(X_train.shape)
+print(y_train.shape)
+
 # #hyperparameter tuning 
 
 if tuning:
@@ -84,7 +89,7 @@ if tuning:
    best_param = xgboost_hyp_tuning.hyperopt()
 
 # final models evaluation using 5-fold cross validation  
-counter = Counter(labels_severe)
+counter = Counter(labels)
 print(counter)
 # estimate scale_pos_weight value
 estimate = counter[0] / counter[1]
@@ -113,7 +118,7 @@ if model_name == 'XGBoost':
 
                         min_child_weight=(best_param['min_child_weight']),
                         colsample_bytree=best_param['colsample_bytree'])
-   model =  XGBClassifier()
+   # model =  XGBClassifier()
 
 if model_name == 'RF':
    best_param = {'criterion': 'gini', 'max_features': 'sqrt', 'max_depth': 9.0, 'n_estimators': 500}
