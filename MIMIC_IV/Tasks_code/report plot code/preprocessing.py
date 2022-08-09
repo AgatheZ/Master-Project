@@ -250,20 +250,20 @@ class Preprocessing:
         self.df_demographic = self.df_demographic.drop(columns = 'stay_id')
         batch_hourly, batch_24h, batch_48h, batch_med, batch_demographic = self.data_imputation(batch_hourly, batch_24h, batch_48h, batch_med, batch_demographic, self.imputation, self.random_state)
         
-        print(batch_med[0])
-        print(batch_demographic[0])
+        
+        self.features = np.concatenate((batch_demographic[0].columns, batch_med[0].columns))
+        
         #feature concatenation 
         stratify_param = self.df_demographic.gcs
         if self.nb_hours == 24:
-            final_data = np.array([[np.concatenate([np.concatenate(batch_hourly[i].values), np.concatenate(batch_med[i].values),np.concatenate(batch_demographic[i].values)])] for i in range(len(batch_hourly))])
+            final_data = np.array([[np.concatenate([np.concatenate(batch_hourly[i].values), np.concatenate(batch_24h[i].values), np.concatenate(batch_med[i].values),np.concatenate(batch_demographic[i].values)])] for i in range(len(batch_hourly))])
             # , np.concatenate(batch_med[i].values), np.concatenate(batch_hourly[i].values), np.concatenate(batch_24h[i].values)])] for i in range(len(batch_hourly))
             print('hello')
             print(final_data.shape)
             
-
         else: 
-            final_data = np.array([[np.concatenate([np.concatenate(batch_demographic[i].values), np.concatenate(batch_hourly[i].values), np.concatenate(batch_24h[i].values), np.concatenate(batch_48h[i].values), np.concatenate(batch_med[i].values)])] for i in range(len(batch_hourly))])
-
+            final_data = np.array([[np.concatenate([np.concatenate(batch_demographic[i].values),  np.concatenate(batch_med[i].values)])] for i in range(len(batch_hourly))])
+            print('HELLO 48')
         print(pd.concat(batch_diag))
         final_data = np.squeeze(final_data)
         # final_data = np.concatenate((final_data, pd.concat(batch_diag)), axis = 1)
