@@ -33,7 +33,7 @@ n_epochs = 1
 batch_size = 16
 lb = 'ABPm'
 is_cuda = torch.cuda.is_available()
-task = 'pressure_experiment' #augmentation or cohort split
+task = 'std_augmented' #augmentation or cohort split
 
 
 
@@ -264,7 +264,7 @@ if task == 'pressure_experiment':
     pretrained_model = train(train_loader, dev_loader, test_loader, learn_rate = lr, hidden=512, layers= 49, task = lb, save = True, model_type="GRU", EPOCHS = n_epochs, severe = '')
 
 if task == 'std_augmented':
-    data, labels = pr.std_pr(lb, transfer=False, window = 3)
+    data, labels = pr.std_pr(lb, transfer=False, window = 1)
     data_TBI, labels_TBI = pr_TBI.std_pr(lb, transfer=False)
     
     final_data_TBI = np.array(data_TBI)

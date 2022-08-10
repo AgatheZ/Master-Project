@@ -464,11 +464,7 @@ class Preprocessing:
         ##label extraction 
         self.df_hourly_copy = self.df_hourly.reset_index(level=['hour_from_intime'])
         labels = self.df_hourly_copy[self.df_hourly_copy.hour_from_intime.isin(range(25,25+window))][label]
-        
-        print('HELLLOOOO')
-        print(labels)
-
-
+ 
         labels = labels.groupby('stay_id').mean()
         labels = labels.dropna()
         task2_cohort = labels.index.values
@@ -489,6 +485,15 @@ class Preprocessing:
         self.df_demographic.gender[self.df_demographic.gender == 'M'] = 0
         df_std = df_std.fillna(0)
   
+
+        ##outlier transformation
+        new_d = self.df_hourly.loc[self.df_hourly.ABPm < 50, 'ABPd'] + (1/3)*(self.df_hourly.loc[self.df_hourly.ABPm < 50, 'ABPs'] - self.df_hourly.loc[self.df_hourly.ABPm < 50, 'ABPd'])
+        new_u = self.df_hourly.loc[self.df_hourly.ABPm > 150, 'ABPd'] + (1/3)*(self.df_hourly.loc[self.df_hourly.ABPm > 150, 'ABPs'] - self.df_hourly.loc[self.df_hourly.ABPm > 150, 'ABPd'])
+
+        self.df_hourly.loc[self.df_hourly.ABPm < 50, 'ABPm'] = new_d
+        self.df_hourly.loc[self.df_hourly.ABPm > 150, 'ABPm'] = new_u
+
+
         ##create batches 
         batch_hourly = self.create_batchs(self.df_hourly)
         batch_demographic = self.create_batchs(self.df_demographic)
@@ -498,8 +503,6 @@ class Preprocessing:
         data_pr = []
         for i in range(len(batch_demographic)):
             batch_hourly[i] = batch_hourly[i].reindex(range(1, self.nb_hours + 1), fill_value = None)
-            print(batch_hourly[i][label])
-            break
             batch_std[i] = batch_std[i].reindex(range(1, self.nb_hours + 1), fill_value = None)
             batch_std[i] = batch_std[i].fillna(0)
             batch_demographic[i] = batch_demographic[i].reindex(range(1, self.nb_hours + 1), fill_value = None)
@@ -511,7 +514,8 @@ class Preprocessing:
             # data_pr.append(pd.concat([batch_hourly[i], batch_std[i], batch_demographic[i]], axis=1))
             data_pr.append(pd.concat([batch_hourly[i], batch_demographic[i]], axis=1))
         
-     
+        # np.save('df_hourly_reg_preprocessed.npy', pd.concat(batch_hourly))
+        # sys.exit()
         #divide between severe and mild
         if transfer:
             dem = self.df_demographic.drop(columns = 'stay_id').reset_index(drop=True)
@@ -545,7 +549,7 @@ class Preprocessing:
 
         ##pivot the tables 
         if 'std' in self.df_hourly.columns:
-            self.df_hourly = self.df_hourly.pivot_table(index = ['stay_id', 'hour_from_intime'], columns = ['feature_name', 'std'], values = 'feature_mean_value')
+            self.df_hourly = self.df_hourly.pivot_table(index = ['stay_id', 'hour_from_intime'], columns = ['feature_name'], values = 'feature_mean_value')
         else:
             self.df_hourly = self.df_hourly.pivot_table(index = ['stay_id', 'hour_from_intime'], columns = 'feature_name', values = 'feature_mean_value')
         self.df_24h = self.df_24h.pivot_table(index = ['stay_id', 'hour_from_intime'], columns = 'feature_name', values = 'feature_mean_value')
@@ -576,6 +580,13 @@ class Preprocessing:
         self.df_med[self.df_med.iloc[:,1:] > 0] = 1
         self.df_demographic.gender[self.df_demographic.gender == 'F'] = 1
         self.df_demographic.gender[self.df_demographic.gender == 'M'] = 0
+
+        ##outlier transformation
+        new_d = self.df_hourly.loc[self.df_hourly.ABPm < 50, 'ABPd'] + (1/3)*(self.df_hourly.loc[self.df_hourly.ABPm < 50, 'ABPs'] - self.df_hourly.loc[self.df_hourly.ABPm < 50, 'ABPd'])
+        new_u = self.df_hourly.loc[self.df_hourly.ABPm > 150, 'ABPd'] + (1/3)*(self.df_hourly.loc[self.df_hourly.ABPm > 150, 'ABPs'] - self.df_hourly.loc[self.df_hourly.ABPm > 150, 'ABPd'])
+
+        self.df_hourly.loc[self.df_hourly.ABPm < 50, 'ABPm'] = new_d
+        self.df_hourly.loc[self.df_hourly.ABPm > 150, 'ABPm'] = new_u
 
         ##create batches 
         batch_hourly = self.create_batchs(self.df_hourly)
@@ -611,8 +622,8 @@ class Preprocessing:
         
         #feature concatenation 
         stratify_param = self.df_demographic.gcs
-        final_data = np.array([[np.concatenate([np.concatenate(batch_demographic[i].values), np.concatenate(batch_hourly[i].values)])] for i in range(len(batch_hourly))])
-
+        final_data = np.array([[np.concatenate([np.concatenate(batch_demographic[i].values),  np.concatenate(batch_hourly[i].values)])] for i in range(len(batch_hourly))])
+        
         # df_24h.to_csv('df_24h.csv')
         # df_48h.to_csv('df_48h.csv')
         # df_med.to_csv('df_med.csv')
@@ -671,7 +682,15 @@ class Preprocessing:
         self.df_demographic.gender[self.df_demographic.gender == 'F'] = 1
         self.df_demographic.gender[self.df_demographic.gender == 'M'] = 0
         df_std = df_std.fillna(0)
-  
+
+        ##outlier transformation
+        new_d = self.df_hourly.loc[self.df_hourly.ABPm < 50, 'ABPd'] + (1/3)*(self.df_hourly.loc[self.df_hourly.ABPm < 50, 'ABPs'] - self.df_hourly.loc[self.df_hourly.ABPm < 50, 'ABPd'])
+        new_u = self.df_hourly.loc[self.df_hourly.ABPm > 150, 'ABPd'] + (1/3)*(self.df_hourly.loc[self.df_hourly.ABPm > 150, 'ABPs'] - self.df_hourly.loc[self.df_hourly.ABPm > 150, 'ABPd'])
+
+        self.df_hourly.loc[self.df_hourly.ABPm < 50, 'ABPm'] = new_d
+        self.df_hourly.loc[self.df_hourly.ABPm > 150, 'ABPm'] = new_u
+
+
         ##create batches 
         batch_hourly = self.create_batchs(self.df_hourly)
         batch_demographic = self.create_batchs(self.df_demographic)
