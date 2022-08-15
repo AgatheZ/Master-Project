@@ -26,7 +26,7 @@ tuning = False
 SHAP = True
 imputation = 'linear'
 model_name = 'LightGBM'
-task = 'ABPs'
+task = 'ABPd'
 
 assert model_name in ['RF', 'XGBoost', 'LightGBM', 'Stacking'], "Please specify a valid model name"
 assert imputation in ['No','carry_forward', 'linear', 'multivariate'], "Please specify a valid imputation method"
