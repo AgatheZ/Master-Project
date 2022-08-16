@@ -27,9 +27,11 @@ tuning = False
 SHAP = False
 imputation = 'carry_forward'
 model_name = 'Stacking'
-lr = 0.001
+lr_1 = 0.001
+lr_2 = 0.0001
 learning_rate_decay = 7 
-n_epochs = 1
+n_epochs_1 = 1
+n_epochs_2 = 1
 batch_size = 16
 lb = 'ABPm'
 is_cuda = torch.cuda.is_available()
@@ -247,7 +249,7 @@ if task == 'pressure_experiment':
     test_loader = DataLoader(test_data, shuffle=True, batch_size=batch_size, drop_last=True)
 
     print('Pretraining with the whole dataset')
-    pretrained_model = train(train_loader, dev_loader, test_loader, learn_rate = lr, hidden=512, layers=49, task = lb, save = True, model_type="GRU", EPOCHS = n_epochs, severe = '', output_dim = 2)
+    pretrained_model = train(train_loader, dev_loader, test_loader, learn_rate = lr_1, hidden=512, layers=49, task = lb, save = True, model_type="GRU", EPOCHS = n_epochs_1, severe = '', output_dim = 2)
 
     print('Finetuning for TBI cohort')
     X_train, X_test, y_train, y_test = train_test_split(final_data_TBI, labels_TBI, test_size=0.2, shuffle = True, random_state=random_state)
@@ -261,7 +263,7 @@ if task == 'pressure_experiment':
 
     test_data = TensorDataset(torch.from_numpy(X_test), torch.from_numpy(y_test))
     test_loader = DataLoader(test_data, shuffle=True, batch_size=batch_size, drop_last=True)
-    pretrained_model = train(train_loader, dev_loader, test_loader, learn_rate = lr, hidden=512, layers= 49, task = lb, save = True, model_type="GRU", EPOCHS = n_epochs, severe = '')
+    pretrained_model = train(train_loader, dev_loader, test_loader, learn_rate = lr_2, hidden=512, layers= 49, task = lb, save = True, model_type="GRU", EPOCHS = n_epochs_2, severe = '')
 
 if task == 'std_augmented':
     data, labels = pr.std_pr(lb, transfer=False, window = 1)
@@ -286,7 +288,7 @@ if task == 'std_augmented':
     test_loader = DataLoader(test_data, shuffle=True, batch_size=batch_size, drop_last=True)
 
     print('Pretraining with the whole dataset')
-    pretrained_model = train(train_loader, dev_loader, test_loader, learn_rate = lr, hidden=512, layers=49, task = lb, save = True, model_type="GRU", EPOCHS = n_epochs, severe = '', output_dim = 2)
+    pretrained_model = train(train_loader, dev_loader, test_loader, learn_rate = lr_1, hidden=512, layers=49, task = lb, save = True, model_type="GRU", EPOCHS = n_epochs_1, severe = '', output_dim = 2)
 
     print('Finetuning for TBI cohort')
     X_train, X_test, y_train, y_test = train_test_split(final_data_TBI, labels_TBI, test_size=0.2, shuffle = True, random_state=random_state)
@@ -300,7 +302,7 @@ if task == 'std_augmented':
 
     test_data = TensorDataset(torch.from_numpy(X_test), torch.from_numpy(y_test))
     test_loader = DataLoader(test_data, shuffle=True, batch_size=batch_size, drop_last=True)
-    pretrained_model = train(train_loader, dev_loader, test_loader, learn_rate = lr, hidden=512, layers= 49, task = lb, save = True, model_type="GRU", EPOCHS = n_epochs, severe = '')
+    pretrained_model = train(train_loader, dev_loader, test_loader, learn_rate = lr_2, hidden=512, layers= 49, task = lb, save = True, model_type="GRU", EPOCHS = n_epochs_2, severe = '')
 
 if task == 'std':
 
@@ -320,7 +322,7 @@ if task == 'std':
 
     test_data = TensorDataset(torch.from_numpy(X_test), torch.from_numpy(y_test))
     test_loader = DataLoader(test_data, shuffle=True, batch_size=batch_size, drop_last=True)
-    pretrained_model = train(train_loader, dev_loader, test_loader, learn_rate = lr, hidden=16, layers=1, task = lb, save = True, model_type="GRU", EPOCHS = n_epochs, severe = '', output_dim = 2)
+    pretrained_model = train(train_loader, dev_loader, test_loader, learn_rate = lr_1, hidden=16, layers=1, task = lb, save = True, model_type="GRU", EPOCHS = n_epochs_1, severe = '', output_dim = 2)
 
 elif task == 'augmentation':
 
@@ -386,7 +388,7 @@ elif task == 'augmentation':
 
     test_data = TensorDataset(torch.from_numpy(X_test), torch.from_numpy(y_test))
     test_loader = DataLoader(test_data, shuffle=True, batch_size=batch_size, drop_last=True)
-    pretrained_model = train(train_loader, dev_loader, test_loader, learn_rate = lr, hidden=512, layers= 49, task = lb, save = True, model_type="GRU", EPOCHS = n_epochs, severe = '')
+    pretrained_model = train(train_loader, dev_loader, test_loader, learn_rate = lr_1, hidden=512, layers= 49, task = lb, save = True, model_type="GRU", EPOCHS = n_epochs_1, severe = '')
 
     print('Finetuning for TBI cohort')
     X_train, X_test, y_train, y_test = train_test_split(final_data_TBI, labels_TBI, test_size=0.2, shuffle = True, random_state=random_state)
@@ -400,7 +402,7 @@ elif task == 'augmentation':
 
     test_data = TensorDataset(torch.from_numpy(X_test), torch.from_numpy(y_test))
     test_loader = DataLoader(test_data, shuffle=True, batch_size=batch_size, drop_last=True)
-    pretrained_model = train(train_loader, dev_loader, test_loader, learn_rate = lr, hidden=512, layers= 49, task = lb, save = True, model_type="GRU", EPOCHS = n_epochs, severe = '')
+    pretrained_model = train(train_loader, dev_loader, test_loader, learn_rate = lr_2, hidden=512, layers= 49, task = lb, save = True, model_type="GRU", EPOCHS = n_epochs_2, severe = '')
 
 else: 
     print('Pretraining with the whole dataset')
