@@ -453,13 +453,28 @@ class Preprocessing:
     def std_pr(self, label, transfer, window = 1):
         self.df_hourly = self.df_hourly.drop(columns = ['icu_intime'])
         self.df_24h = self.df_24h.drop(columns = ['icu_intime'])
+
+        df_hourly_copy = self.df_hourly
+        self.df_hourly = df_hourly_copy.pivot_table(index = ['stay_id', 'hour_from_intime'], columns = 'feature_name', values = 'feature_mean_value')
+        self.df_24h = self.df_24h.pivot_table(index = ['stay_id', 'hour_from_intime'], columns = 'feature_name', values = 'feature_mean_value')
+
         ##pivot the tables 
-        df_std = self.df_hourly.pivot_table(index = ['stay_id', 'hour_from_intime'], columns = 'feature_name', values = 'std')
+        df_std = df_hourly_copy.pivot_table(index = ['stay_id', 'hour_from_intime'], columns = 'feature_name', values = 'std')
         df_std = df_std.reset_index(level=['hour_from_intime'])
+
+        ##outlier transformation
+        new_d = self.df_hourly.loc[self.df_hourly.ABPm < 50, 'ABPd'] + (1/3)*(self.df_hourly.loc[self.df_hourly.ABPm < 50, 'ABPs'] - self.df_hourly.loc[self.df_hourly.ABPm < 50, 'ABPd'])
+        new_u = self.df_hourly.loc[self.df_hourly.ABPm > 150, 'ABPd'] + (1/3)*(self.df_hourly.loc[self.df_hourly.ABPm > 150, 'ABPs'] - self.df_hourly.loc[self.df_hourly.ABPm > 150, 'ABPd'])
+
+        self.df_hourly.loc[self.df_hourly.ABPm < 50, 'ABPm'] = new_d
+        self.df_hourly.loc[self.df_hourly.ABPm > 150, 'ABPm'] = new_u
+
+
+
         labels_std = df_std[df_std.hour_from_intime.isin(range(25,25+window))][label].dropna()
         labels_std = labels_std.groupby('stay_id').mean()
-        self.df_hourly = self.df_hourly.pivot_table(index = ['stay_id', 'hour_from_intime'], columns = 'feature_name', values = 'feature_mean_value')
-        self.df_24h = self.df_24h.pivot_table(index = ['stay_id', 'hour_from_intime'], columns = 'feature_name', values = 'feature_mean_value')
+
+        
 
         ##label extraction 
         self.df_hourly_copy = self.df_hourly.reset_index(level=['hour_from_intime'])
@@ -486,12 +501,6 @@ class Preprocessing:
         df_std = df_std.fillna(0)
   
 
-        ##outlier transformation
-        new_d = self.df_hourly.loc[self.df_hourly.ABPm < 50, 'ABPd'] + (1/3)*(self.df_hourly.loc[self.df_hourly.ABPm < 50, 'ABPs'] - self.df_hourly.loc[self.df_hourly.ABPm < 50, 'ABPd'])
-        new_u = self.df_hourly.loc[self.df_hourly.ABPm > 150, 'ABPd'] + (1/3)*(self.df_hourly.loc[self.df_hourly.ABPm > 150, 'ABPs'] - self.df_hourly.loc[self.df_hourly.ABPm > 150, 'ABPd'])
-
-        self.df_hourly.loc[self.df_hourly.ABPm < 50, 'ABPm'] = new_d
-        self.df_hourly.loc[self.df_hourly.ABPm > 150, 'ABPm'] = new_u
 
 
         ##create batches 
@@ -737,4 +746,3 @@ class Preprocessing:
             return data_pr, labels, data_mild, labels_mild, data_severe, labels_severe
 
         return data_pr, test
-
