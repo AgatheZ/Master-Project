@@ -1,0 +1,339 @@
+﻿feature_name
+% Minute Volume
+ABI Ankle BP L 
+ABI Ankle BP R
+ABI Brachial BP L
+ABI Brachial BP R 
+ABPd
+ABPm
+ABPs
+ACT
+ALT
+APACHEIII
+ART BP Diastolic
+ART BP Mean
+ART BP Systolic
+ART Lumen Volume
+AST
+ATC %
+AUG
+Absolute Count - Basos
+Absolute Count - Eos
+Absolute Count - Lymphs
+Absolute Count - Monos
+Absolute Count - Neuts
+Absolute Neutrophil Count
+Access Pressure
+Activity HR - Aerobic Capacity
+Activity RR - Aerobic Activity Response
+Activity RR - Aerobic Capacity
+Albumin
+Alkaline Phosphate
+Ammonia
+Amylase
+Anion gap
+Apache IV A-aDO2
+ApacheIV_LOS
+Apnea Interval
+Arctic Sun Water Temp
+Arctic Sun/Alsius Set Temp
+Arctic Sun/Alsius Temp #1 C
+Arctic Sun/Alsius Temp #2 C
+Arterial Base Excess
+BUN
+Baseline Current/mA
+BiPap EPAP
+BiPap IPAP
+BiPap O2 Flow
+Bladder Pressure
+Bladder Scan Estimate
+Blood Flow (ml/min)
+Blood Temp CCO (C)
+Brain Natiuretic Peptide (BNP)
+C Reactive Protein (CRP)
+CFI (PiCCO)
+CI (PiCCO)
+CK (CPK)
+CK-MB
+CK-MB fraction (%)
+CO (Arterial)
+CO (CCO)
+CO (PiCCO)
+CO (thermodilution)
+CO / CI Change
+CO2 production
+CPP
+CVP
+Calcium non-ionized
+Cardiac Index (CI NICOM)
+Cardiac Output (CO NICOM)
+Central Venous O2% Sat
+Cerebral T (C)
+Chloride (serum)
+Chloride (whole blood)
+Cholesterol
+Citrate (ACD-A)
+Compliance
+Cortisol
+Creatinine (serum)
+Creatinine (whole blood)
+Cuff Pressure
+Cuff Volume (mL)
+Current Goal
+Current Used/mA
+D-Dimer
+DIA - Assisted
+DIA - Unassisted
+Dialysate Rate
+Differential - Immature Granulocytes
+Differential-Atyps
+Differential-Bands
+Differential-Basos
+Differential-Eos
+Differential-Lymphs
+Differential-Monos
+Differential-Neuts
+Digoxin
+Direct Bilirubin
+Doppler BP
+Dwell Time (Hours)
+ELWI (PiCCO)
+Effluent Pressure
+Epidural Bolus (mL)
+Epidural Infusion Rate (mL/hr)
+Epidural Total Dose (mL)
+EtCO2
+Expiratory Ratio
+FK506
+FiO2
+Fibrinogen
+Filter Pressure
+Flow Rate (L/min)
+Fspn High
+GEDI (PiCCO)
+GI #1 Tube Mark (CM)
+GI #2 Tube Mark (CM)
+GI pH
+Gentamicin (Random)
+Glucose (serum)
+Glucose (whole blood)
+Glucose FS (range 70 -100)
+HCO3 (serum)
+HDL
+HR
+Hematocrit (serum)
+Hematocrit (whole blood - calc)
+Hemodialysis Output
+Hemoglobin
+Heparin Dose (per hour)
+Hourly PFR
+IABP Volume
+IC2
+ICP
+INR
+IT
+Inspiratory Ratio
+Inspired Gas Temp.
+Ionized Calcium
+LDH
+LDL calculated
+LDL measured
+Lactic Acid
+Lipase
+MAP - Assisted
+MDI #1 Puff
+MDI #2 Puff
+MDI #3 Puff
+Magnesium
+Manual BPd L
+Manual BPd R
+Manual BPs L
+Manual BPs R
+Mean Airway Pressure
+Medication Infusion Rate
+Minute Volume
+Mixed Venous O2% Sat
+NBPd
+NBPm
+NBPs
+Negative Insp. Force
+O2 Flow
+O2 Flow (additional cannula)
+P High (APRV)
+P Low (APRV)
+PA Line cm Mark
+PAPd
+PAPm
+PAPs
+PBP (Prefilter) Replacement Rate
+PCA 1 hour limit
+PCA attempt
+PCA basal rate (mL/hour)
+PCA bolus
+PCA dose
+PCA inject
+PCA lockout (min)
+PCA total dose
+PCO2 (Arterial)
+PCO2 (Venous)
+PCV Level
+PCWP
+PEEP set
+PH (Arterial)
+PH (Venous)
+PH (dipstick)
+PO2 (Arterial)
+PO2 (Mixed Venous)
+PO2 (Venous)
+PSV Level
+PT
+PTT
+Paw High
+PbtO2
+PeCO2
+Peak Insp. Pressure
+Permanent Pacemaker Rate
+Phenobarbital
+Phenytoin (Dilantin)
+Phenytoin (Free)
+Phosphorous
+Pinsp (Draeger only)
+Pinsp (Hamilton)
+Plateau Pressure
+Plateau Pressure (IABP)
+Platelet Count
+Pminimum
+Post Filter Replacement Rate
+Potassium (serum)
+Potassium (whole blood)
+Pressure Ulcer #1-  Width
+Pressure Ulcer #1- Depth
+Pressure Ulcer #2-  Width
+Pressure Ulcer #2- Depth
+Pressure Ulcer #3-  Width
+Pressure Ulcer #4-  Width
+Pressure ulcer #1- Length
+Pressure ulcer #2- Length
+Pressure ulcer #3- Length
+Pressure ulcer #4- Length
+QTc
+RCexp (Measured Time Constant)
+RR
+Recovery HR - Aerobic Activity Response
+Recovery HR - Aerobic Capacity
+Recovery O2 Sat - Aerobic Capacity
+Recovery O2 sat - Aerobic Activity Response
+Recovery RR - Aerobic Activity Response
+Recovery RR - Aerobic Capacity
+Recruitment Duration
+Recruitment Press
+Replacement Rate
+Resistance Exp
+Resistance Insp
+Respiratory Rate (Set)
+Respiratory Rate (Total)
+Respiratory Rate (spontaneous)
+Rest HR -  Aerobic Activity Response
+Rest HR - Aerobic Capacity
+Rest O2 Sat - Aerobic Activity Response
+Rest O2 Sat - Aerobic Capacity
+Rest RR - Aerobic Activity Response
+Rest RR - Aerobic Capacity
+Return Pressure
+SV (Arterial)
+SV Neb Dose #2
+SVI (PiCCO)
+SVI Change
+SVRI (PiCCO)
+SVV (Arterial)
+SVV (PiCCO)
+SYS - Assisted
+SYS - Unassisted
+SaO2
+Sed Rate
+Serum Osmolality
+Site Depth #1
+Site Depth #2
+Site Depth #3
+Site Depth #4
+Site Depth #5
+Site Depth #6
+Site Depth #7
+Site Depth #8
+Site Length #1
+Site Length #2
+Site Length #3
+Site Length #4
+Site Length #5
+Site Length #6
+Site Length #7
+Site Length #8
+Site Length #9
+Site Width #1
+Site Width #2
+Site Width #3
+Site Width #4
+Site Width #5
+Site Width #6
+Site Width #7
+Site Width #8
+Site Width #9
+Skeletal Traction #1 - Pounds
+Sodium (serum)
+Sodium (whole blood)
+SpO2
+Specific Gravity (urine)
+Spont RR
+Spont Vt
+Stroke Volume (SV NICOM)
+Stroke Volume Index (SVI NICOM)
+Stroke Volume Variation (SVI NICOM)
+SvO2
+T High (APRV)
+T Low (APRV)
+TCO2 (calc) Arterial
+TCO2 (calc) Venous
+TFC (NICOM)
+TPR (NICOM)
+TPRI (NICOM)
+Temp AV interval
+Temp Atrial Sens Setting mV
+Temp Atrial Sens Threshold mV
+Temp Atrial Stim Setting mA
+Temp Atrial Stim Threshold mA
+Temp Pacemaker Rate
+Temp Pacemaker Wires Atrial
+Temp Pacemaker Wires Ground
+Temp Pacemaker Wires Venticular
+Temp Venticular Sens Threshold mV
+Temp Venticular Stim Threshold mA
+Temp Ventricular Sens Setting mV
+Temp Ventricular Stim Setting mA
+Temperature C
+Temperature F
+Thrombin
+Tidal Volume (observed)
+Tidal Volume (set)
+Tidal Volume (spontaneous)
+Time spent
+Timespent
+Tobramycin (Random)
+Total Bilirubin
+Total Granulocyte Count (TGC)
+Total PEEP Level
+Total Protein
+Transpulmonary Press (Exp. Hold)
+Transpulmonary Press (Insp. Hold)
+Triglyceride
+Troponin-T
+Ultrafiltrate Output
+Uric Acid
+VEN  Lumen Volume
+Vancomycin (Random)
+Vancomycin (Trough)
+Ventilator Tank #1
+Ventilator Tank #2
+Volume In (PD)
+Volume Out (PD)
+Vti High
+WBC
