@@ -40,14 +40,14 @@ from collections import Counter
 warnings.filterwarnings("ignore")
 
 ##Variables 
-nb_hours = 24
+nb_hours = 48
 random_state = 1
-TBI_split = True
+TBI_split = False
 tuning = False
 SHAP = False
-imputation = 'linear'
+imputation = 'No'
 model_name = 'XGBoost'
-threshold = 4
+threshold = 5
 
 assert model_name in ['RF', 'XGBoost', 'LightGBM', 'Stacking'], "Please specify a valid model name"
 assert imputation in ['No', 'carry_forward', 'linear', 'multivariate'], "Please specify a valid imputation method"
@@ -103,7 +103,8 @@ def ROC_plot(rocs, fprs, tprs, col):
 #Preprocessing
 pr_24 = Preprocessing(df_hourly, df_24h, df_48h, df_med, df_demographic, 48, TBI_split, random_state, imputation, diag)
 
-data_mild, data_severe, labels_mild, labels_severe = pr_24.preprocess_data(threshold)
+data_mild,  labels_mild = pr_24.preprocess_data(threshold)
+#data_mild, data_severe, labels_mild, labels_severe = pr_24.preprocess_data(threshold)
 
 final_data = data_mild
 labels = labels_mild
@@ -122,7 +123,7 @@ best_param_severe = {'alpha': 0.0, 'colsample_bytree': 0.5566668059186075, 'eta'
 best_param = {'alpha': 12.0, 'colsample_bytree': 0.5265548343516888, 'eta': 0.10955899500196617, 'gamma': 3.7037045423905743, 'max_depth': 15, 'min_child_weight': 8.0}
 
 
-best_param = best_param
+best_param = best_param_severe
 depth = best_param['max_depth']
 model = XGBClassifier(
                      random_state = random_state, 
@@ -145,7 +146,7 @@ y = labels
 shaps_values = list()
 test_idx = list()
 mean_fpr = np.linspace(0, 1, 50)
-skf = StratifiedKFold(n_splits=2, random_state= random_state, shuffle=True)
+skf = StratifiedKFold(n_splits=5, random_state= random_state, shuffle=True)
 for train_index, test_index in skf.split(X, y):
    X_train, X_test = X[train_index], X[test_index]
    y_train, y_test = y[train_index], y[test_index]
