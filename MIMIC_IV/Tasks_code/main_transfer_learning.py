@@ -176,10 +176,10 @@ def train(train_loader, dev_loader, test_loader, learn_rate, save = True, task =
         pred = np.asarray(pred)
         label = np.asarray(label)
         
-        mae_1 = mean_absolute_error(label[0], pred[0])
-        mae_2 = mean_absolute_error(label[1], pred[1])
-        rmse_1 = np.sqrt(mean_squared_error(label[0], pred[0]))
-        rmse_2 = np.sqrt(mean_squared_error(label[1], pred[1]))
+        mae_1 = mean_absolute_error(label[:,:,0], pred[:,:,0])
+        mae_2 = mean_absolute_error(label[:,:,1], pred[:,:,1])
+        rmse_1 = np.sqrt(mean_squared_error(label[:,:,0], pred[:,:,0]))
+        rmse_2 = np.sqrt(mean_squared_error(label[:,:,1], pred[:,:,1]))
         print("Epoch: {} Train loss: {:.4f}, Dev loss: {:.4f}, Test loss: {:.4f}, Test MAE : {:.4f}, Test MAE (std) : {:.4f}".format(
             epoch, train_loss, dev_loss, test_loss, mae_1, mae_2))
         print("Epoch: {} Test RMSE: {:.4f}, Std test RMSE: {:.4f}".format(
