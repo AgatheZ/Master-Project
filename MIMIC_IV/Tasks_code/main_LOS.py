@@ -1,38 +1,28 @@
-import numpy as np
 import pandas as pd
 import warnings
-from scipy.stats import uniform
 from mlxtend.classifier import StackingCVClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.naive_bayes import GaussianNB 
-from sklearn.model_selection import (KFold, StratifiedKFold, cross_val_predict,
-                                     cross_validate, train_test_split)
-from sklearn.preprocessing import normalize
+from sklearn.model_selection import (train_test_split)
 from xgboost import XGBClassifier
 from evaluation import Evaluation
 from preprocessing import Preprocessing
 from hyp_tuning import HypTuning
 from sklearn.ensemble import RandomForestClassifier
 import lightgbm as lgb
-from sklearn.decomposition import PCA
-import matplotlib.pyplot as plt 
-import seaborn as sns
-import sys
-
-# Generate and plot a synthetic imbalanced classification dataset
 from collections import Counter
 
 warnings.filterwarnings("ignore")
 
 ##Variables 
-nb_hours = 48
-random_state = 1
-TBI_split = True
-tuning = False
-SHAP = False
-imputation = 'No'
-model_name = 'LightGBM'
-threshold = 4
+nb_hours = 48 #Consider 24 or 48 first hours of data 
+random_state = 1 #random seed
+TBI_split = True #Whether the cohort should be split in severe/mild or not
+tuning = False #Whether hyperparameter tuning is done
+SHAP = False #Whether SHAP values are displayed 
+imputation = 'carry_forward' #Imputation method
+model_name = 'LightGBM' #Model 
+threshold = 4 #LOS threshold value
 
 assert model_name in ['RF', 'XGBoost', 'LightGBM', 'Stacking'], "Please specify a valid model name"
 assert imputation in ['No', 'carry_forward', 'linear', 'multivariate'], "Please specify a valid imputation method"
@@ -45,11 +35,9 @@ df_med = pd.read_csv(r"C:\Users\USER\OneDrive\Summer_project\Azure\data\preproce
 df_demographic = pd.read_csv(r"C:\Users\USER\OneDrive\Summer_project\Azure\data\demographics_mimic4.csv", delimiter=',').sort_values(by=['stay_id'])
 features = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\Master-Project\MIMIC_IV\resources\features.csv', header = None)
 diag = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\mimiciv_diag.csv')
-
-
-
 print('Data Loading - done')
 
+##features names for SHAP values
 if nb_hours == 24:
    features = features.loc[:224,2] 
 else:
@@ -63,37 +51,34 @@ if TBI_split:
    final_data_mild, final_data_severe, labels_mild, labels_severe = pr.preprocess_data(threshold)
 else:
    final_data, labels = pr.preprocess_data(threshold)
+
 print('Data Preprocessing - done')
 
-#PCA and T-SNE for feature visualisation 
-# pr.PCA_analysis(final_data, labels)
-
-
-
-
-#XGBOOST MODEL 
+if TBI_split:
+   strat = final_data_severe[:,-2]
+else:
+   strat = final_data[:,-2]
+##Data split with death stratification
 if TBI_split:
    X_train, X_test, y_train, y_test = train_test_split(final_data_severe, labels_severe, test_size=0.2, shuffle = True, random_state=random_state)
    X_train, X_val, y_train, y_val  = train_test_split(X_train, y_train, test_size=0.25, random_state=random_state)
 else:
-   X_train, X_test, y_train, y_test = train_test_split(final_data, labels, test_size=0.2, shuffle = True, random_state=random_state)
+   X_train, X_test, y_train, y_test = train_test_split(final_data, labels, test_size=0.2, shuffle = True, stratify=strat, random_state=random_state)
    X_train, X_val, y_train, y_val  = train_test_split(X_train, y_train, test_size=0.25, random_state=random_state)
 
-print(X_train.shape)
-print(y_train.shape)
 
-# #hyperparameter tuning 
-
+##hyperparameter tuning 
 if tuning:
    xgboost_hyp_tuning = HypTuning(False, 5, model_name, X_train, y_train, X_val, y_val, n_iter = 1000, random_state = random_state)
    best_param = xgboost_hyp_tuning.hyperopt()
 
-# final models evaluation using 5-fold cross validation  
-# counter = Counter(labels)
-# print(counter)
-# # estimate scale_pos_weight value
-# estimate = counter[0] / counter[1]
+##Weighted models 
+if not TBI_split:
+   counter = Counter(labels)
+   # estimate scale_pos_weight value
+   estimate = counter[0] / counter[1]
 
+##Best hyperparameter found for the different models
 if model_name == 'XGBoost':
    if TBI_split:
       best_param_mild = {'alpha': 0.0, 'colsample_bytree': 0.5404929749427543, 'eta': 0.08602706957522405, 'gamma': 1.8786165006154019, 'max_depth': 17.0, 'min_child_weight': 3.0}
@@ -118,7 +103,7 @@ if model_name == 'XGBoost':
 
                         min_child_weight=(best_param['min_child_weight']),
                         colsample_bytree=best_param['colsample_bytree'])
-   # model =  XGBClassifier()
+
 
 if model_name == 'RF':
    best_param = {'criterion': 'gini', 'max_features': 'sqrt', 'max_depth': 9.0, 'n_estimators': 500}
@@ -135,7 +120,6 @@ if model_name == 'Stacking':
    best_param = {'alpha': 3.0, 'colsample_bytree': 0.5359922767597586, 'eta': 0.14476892774894637, 'gamma': 2.3216870446364952, 'max_depth': 18.0, 'min_child_weight': 1.0}
    depth = best_param['max_depth']
    xgb = XGBClassifier()
-
    best_param = {'boosting_type': 'gbdt', 'colsample_by_tree': 0.9203696945188418, 'learning_rate': 0.04047240211150923, 'max_depth': 14.0, 'min_child_weight': 4.735811783605331, 'num_leaves': 32.0, 'reg_alpha': 0.33592465595298626, 'reg_lambda': 0.21263015922040293}
    lgbm = lgb.LGBMClassifier()
    best_param = {'criterion': 'gini', 'max_features': 'sqrt', 'max_depth': 9.0, 'n_estimators': 500}
@@ -144,7 +128,7 @@ if model_name == 'Stacking':
    clf2 = GaussianNB()
    model = StackingCVClassifier(classifiers = (lgbm, rf, clf1, clf2), meta_classifier=xgb)
 
-#fits and evaluates the model _mild
+#Models evaluation
 if TBI_split:
    # eval = Evaluation(False, model, 'Tuned ' + model_name, final_data_mild, labels_mild, random_state, SHAP, features, nb_hours, severity = '', threshold = threshold)
    eval = Evaluation(False, model, 'Tuned ' + model_name, final_data_severe, labels_severe, random_state, SHAP, features, nb_hours, severity = '', threshold = threshold)
@@ -153,9 +137,7 @@ else:
    eval = Evaluation(False, model, 'Tuned ' + model_name, final_data, labels, random_state, SHAP, features, nb_hours, severity = '', threshold = threshold)
    eval.evaluate()
 
-# #save the model 
-# filename = 'LOS_XGBoost_random_sampling.sav'
-# pickle.dump(xgbc, open(filename, 'wb'))
+
 
 
 

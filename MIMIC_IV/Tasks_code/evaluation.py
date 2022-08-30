@@ -1,47 +1,39 @@
-import matplotlib
-from sklearn.model_selection import cross_val_score
-from sklearn.metrics import accuracy_score, confusion_matrix
-from sklearn.model_selection import cross_val_score, StratifiedKFold, KFold
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import KFold
 from sklearn.metrics import f1_score
 import matplotlib.pyplot as plt
 from sklearn.metrics import roc_auc_score
 from sklearn.metrics import roc_curve
-from sklearn.datasets import make_classification
-from sklearn.metrics import plot_confusion_matrix, mean_absolute_error,  mean_squared_error
+from sklearn.metrics import mean_absolute_error,  mean_squared_error
 import statistics
 import numpy as np
 import pandas as pd
 import shap
 import math
-
 from xgboost import XGBClassifier 
 
-
-
 class Evaluation:
+    'Class for LOS models evaluation'
     def __init__(self, reg = True, model = XGBClassifier(), model_name = 'XGBoost', X = None, y = None, random_state = 1, SHAP = False, feature_names = None, nb_hours = 24, severity = '', threshold = 4):
-        self.model = model
+        self.model = model #model used
         self.reg = reg
         self.model_name = model_name
-        self.X = X
-        self.y = y
+        self.X = X #Feature set
+        self.y = y #labels
         self.random_state = random_state
-        self.SHAP = SHAP
-        self.feature_names = feature_names
+        self.SHAP = SHAP #Display SHAP summary or not
+        self.feature_names = feature_names #feature names for SHAP
         self.nb_hours = nb_hours
         self.severity = severity
-        self.threshold = threshold
+        self.threshold = threshold #cut-off value
 
-
-    
     def ROC_plot(self, rocs, fprs, tprs):
-    # Compute ROC curve and ROC area for each class
-    # generate a no skill prediction (majority class)
+        'Function that plots a ROC curve for the considered model'
+ 
         mean_rocs = np.mean(rocs)
         mean_fprs = np.linspace(0, 1, 50)
         mean_tprs = np.mean(tprs, axis = 0)
         mean_tprs[-1] = 1.0
-
         std_tprs = np.std(tprs, axis = 0)
         std_roc = np.std(rocs)
 
@@ -56,24 +48,27 @@ class Evaluation:
         tprs_lower = np.maximum(mean_tprs - std_tprs, 0)
         plt.fill_between(mean_fprs, tprs_lower, tprs_upper, color='grey', alpha=.2,
                  label=r'$\pm$ standard deviation - 5-folds')
+
         # axis labels
         plt.xlabel('False Positive Rate')
         plt.ylabel('True Positive Rate')
+        
         # show the legend
         plt.legend()
+        
         # show the plot
         plt.title('Length of stay prediction (> %i days) for %s TBI patients \n ROC curve - %.0fh'%(self.threshold, self.severity, self.nb_hours))
         plt.show()
 
-
     def evaluate(self):
+        '''Function that computes the Accuracy, F1-Score and AUROC of the model performing a 5-fold cross validation.
+        SHAP values are computed if self.SHAP = True'''
         accs = []
         f1s = []
         rocs = []
         tprs = []
         fprs = []
         shaps_values = list()
-        test_idx = list()
         mean_fpr = np.linspace(0, 1, 50)
         skf = KFold(n_splits=5, random_state= self.random_state, shuffle=True)
         for train_index, test_index in skf.split(self.X, self.y):
@@ -99,29 +94,29 @@ class Evaluation:
             tprs[-1][0] = 0.0
             
             if self.SHAP:
+                #Displays a SHAP summary value
                 ex = shap.Explainer(xgbc)
                 shaps_values = ex.shap_values(X_test)
                 plt.figure(figsize = (15,15))
                 shap.summary_plot(shaps_values, pd.DataFrame(X_test, columns = self.feature_names), show = False)
-
-                plt.savefig('SHAP_LOS_{}.png'.format(self.threshold),bbox_inches='tight', dpi=300)
+                # plt.savefig('SHAP_LOS_{}.png'.format(self.threshold),bbox_inches='tight', dpi=300)
                 self.SHAP = False
 
         print('Averaged accuracy (5-folds): %.3f ±  %.3f' % (np.mean(accs), statistics.stdev(accs)))
         print('Averaged f1-Score (5-folds): %.3f ±  %.3f' % (np.mean(f1s), statistics.stdev(f1s)))
         print('Averaged AUROC (5-folds): %.3f ±  %.3f' % (np.mean(rocs), statistics.stdev(rocs)))
 
-
         plt.figure()
         self.ROC_plot(rocs, fprs, tprs)
 
     def evaluate_regression(self):
+        '''Function that evaluates the regression tasks for the first approach (ML).
+        SHAP summary plot is displayed if SHAP = TRUE
+        MAE, RMSE and averaged error are computed over 5 folds'''
         rmse = []
         mae = []
         error = []
         shaps_values = list()
-        test_idx = list()
-        mean_fpr = np.linspace(0, 1, 50)
         skf = KFold(n_splits=5, random_state= self.random_state, shuffle=True)
         for train_index, test_index in skf.split(self.X, self.y):
             X_train, X_test = self.X[train_index], self.X[test_index]
@@ -129,6 +124,8 @@ class Evaluation:
             xgbc = self.model
             xgbc.fit(X_train, y_train)
             y_pred = xgbc.predict(X_test)
+            
+            #compute the metrics
             mse = mean_squared_error(y_test, y_pred)
             mean_abs = mean_absolute_error(y_test, y_pred)
             er = y_pred  - y_test
@@ -141,7 +138,7 @@ class Evaluation:
                 shaps_values = ex.shap_values((X_test))
                 shap.summary_plot(shaps_values, pd.DataFrame(X_test, columns = self.feature_names))
                 self.SHAP = False
-
+                
         print('Averaged RMSE (5-folds): %.3f ±  %.3f' % (np.mean(rmse), statistics.stdev(rmse)))
         print('Averaged MAE (5-folds): %.3f ±  %.3f' % (np.mean(mae), statistics.stdev(mae)))
         print('Averaged error (5-folds): %.3f ±  %.3f' % (np.mean(np.concatenate(error)), statistics.stdev(np.concatenate(error))))
