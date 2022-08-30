@@ -255,14 +255,14 @@ class Preprocessing:
         #feature concatenation 
         stratify_param = self.df_demographic.gcs
         if self.nb_hours == 24:
-            final_data = np.array([[np.concatenate([np.concatenate(batch_med[i].values),np.concatenate(batch_demographic[i].values)])] for i in range(len(batch_hourly))])
+            final_data = np.array([[np.concatenate([np.concatenate(batch_hourly[i].values), np.concatenate(batch_med[i].values),np.concatenate(batch_demographic[i].values)])] for i in range(len(batch_hourly))])
             # , np.concatenate(batch_med[i].values), np.concatenate(batch_hourly[i].values), np.concatenate(batch_24h[i].values)])] for i in range(len(batch_hourly))
             print('hello')
             print(final_data.shape)
             
 
         else: 
-            final_data = np.array([[np.concatenate([np.concatenate(batch_demographic[i].values), np.concatenate(batch_med[i].values)])] for i in range(len(batch_hourly))])
+            final_data = np.array([[np.concatenate([np.concatenate(batch_demographic[i].values), np.concatenate(batch_hourly[i].values), np.concatenate(batch_24h[i].values), np.concatenate(batch_48h[i].values), np.concatenate(batch_med[i].values)])] for i in range(len(batch_hourly))])
 
         print(pd.concat(batch_diag))
         final_data = np.squeeze(final_data)
@@ -451,6 +451,7 @@ class Preprocessing:
         return final_data, labels
 
     def std_pr(self, label, transfer, window = 1):
+        print('std_pr')
         self.df_hourly = self.df_hourly.drop(columns = ['icu_intime'])
         self.df_24h = self.df_24h.drop(columns = ['icu_intime'])
 
@@ -506,23 +507,21 @@ class Preprocessing:
         ##create batches 
         batch_hourly = self.create_batchs(self.df_hourly)
         batch_demographic = self.create_batchs(self.df_demographic)
+        print(batch_demographic[0])
         batch_std = self.create_batchs(df_std)
         ##reindex for patients that don't have entries at the begginning of their stays + cut to 48h
         ##aggregation as well
         data_pr = []
         for i in range(len(batch_demographic)):
             batch_hourly[i] = batch_hourly[i].reindex(range(1, self.nb_hours + 1), fill_value = None)
-            batch_std[i] = batch_std[i].reindex(range(1, self.nb_hours + 1), fill_value = None)
-            batch_std[i] = batch_std[i].fillna(0)
+            
             batch_demographic[i] = batch_demographic[i].reindex(range(1, self.nb_hours + 1), fill_value = None)
             batch_demographic[i] = batch_demographic[i].fillna(batch_demographic[i].mean())
             batch_hourly[i] = batch_hourly[i].drop(columns = 'stay_id')
-            batch_std[i] = batch_std[i].drop(columns = 'stay_id')
-
             batch_demographic[i] = batch_demographic[i].drop(columns = 'stay_id')
-            # data_pr.append(pd.concat([batch_hourly[i], batch_std[i], batch_demographic[i]], axis=1))
             data_pr.append(pd.concat([batch_hourly[i], batch_demographic[i]], axis=1))
-        
+            
+
         # np.save('df_hourly_reg_preprocessed.npy', pd.concat(batch_hourly))
         # sys.exit()
         #divide between severe and mild
@@ -536,10 +535,10 @@ class Preprocessing:
 
         mean = pd.concat(data_pr).mean()
         for i in range(len(batch_hourly)):
-                data_pr[i] = data_pr[i].fillna(method = "ffill")
+                # data_pr[i] = data_pr[i].fillna(method = "ffill")
                 data_pr[i] = data_pr[i].fillna(mean)
                 data_pr[i] = data_pr[i].fillna(0)
-
+                data_pr[i] =  normalize(data_pr[i])
         
 
         if transfer:
@@ -735,6 +734,7 @@ class Preprocessing:
                 data_pr[i] = data_pr[i].fillna(method = "ffill")
                 data_pr[i] = data_pr[i].fillna(mean)
                 data_pr[i] = data_pr[i].fillna(0)
+                data_pr[i] = normalize(data_pr[i])
 
         
 
