@@ -23,7 +23,7 @@ nb_hours = 24
 random_state = 1
 TBI_split = False
 tuning = False
-SHAP = True
+SHAP = False
 imputation = 'carry_forward'
 model_name = 'LightGBM'
 task = 'ABPs'
@@ -49,12 +49,14 @@ else:
 #Preprocessing
 pr = Preprocessing(df_hourly, df_24h, df_48h, df_med, df_demographic, nb_hours, TBI_split, random_state, imputation)
 final_data, labels = pr.task_2_pr(label = task)
-print(final_data.shape)
 
+strat = final_data[:,4]
 
-X_train, X_test, y_train, y_test = train_test_split(final_data, labels, test_size=0.2, shuffle = True, random_state=random_state)
+#Split ds 
+X_train, X_test, y_train, y_test = train_test_split(final_data, labels, test_size=0.2, shuffle = True, stratify = strat, random_state=random_state)
 X_train, X_val, y_train, y_val  = train_test_split(X_train, y_train, test_size=0.25, random_state=random_state)
 
+#Hyperparameter tuning with hyperopt 
 if tuning:
    xgboost_hyp_tuning = HypTuning(True, 5,  model_name, X_train, y_train, X_val, y_val, n_iter = 750, random_state = random_state)
    best_param = xgboost_hyp_tuning.hyperopt()
@@ -168,31 +170,7 @@ if model_name == 'Stacking':
 model.fit(np.concatenate((X_train, X_val)), np.concatenate((y_train, y_val)))
 pred = model.predict(X_test)
 
-# plt.title('Analysis of the ABPm predictions')
-# plt.plot(range(75), pred, c='red')
-# plt.plot(range(75), y_test)
-# plt.legend(['predicted values (XGBOOST)', 'original values'])
-# plt.xlabel('Patient n°')
-# plt.ylabel('ABPm (mmHg)')
-
-
-
-true = y_test - X_test[:,6+24+24+24]
-print(X_test[:,6+24].shape)
-preds = pred - X_test[:,6+24+24+24]
-tp,tn,fp,fn = 0,0,0,0
-for i in range(len(true)):
-    if preds[i] > 0 and true[i]>0:
-        tp+=1
-    if preds[i] < 0 and true[i]<0:
-        tn+=1
-    if preds[i] > 0 and true[i]<0:
-        fp+=1
-    if preds[i] < 0 and true[i]>0:
-        fn+=1
-        
-print(tp,tn,fp,fn)
-
-# eval = Evaluation(True, model, 'Tuned ' + model_name, final_data, labels, random_state, SHAP, features, nb_hours)
-# eval.evaluate_regression()
+#Model evaluation 
+eval = Evaluation(True, model, 'Tuned ' + model_name, final_data, labels, random_state, SHAP, features, nb_hours)
+eval.evaluate_regression()
 

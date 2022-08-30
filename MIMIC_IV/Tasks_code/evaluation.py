@@ -1,5 +1,5 @@
 from sklearn.metrics import accuracy_score
-from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import StratifiedKFold, KFold
 from sklearn.metrics import f1_score
 import matplotlib.pyplot as plt
 from sklearn.metrics import roc_auc_score
@@ -117,7 +117,7 @@ class Evaluation:
         mae = []
         error = []
         shaps_values = list()
-        skf = StratifiedKFold(n_splits=5, random_state= self.random_state, shuffle=True)
+        skf = KFold(n_splits=5, random_state= self.random_state, shuffle=True)
         for train_index, test_index in skf.split(self.X, self.y):
             X_train, X_test = self.X[train_index], self.X[test_index]
             y_train, y_test = self.y[train_index], self.y[test_index]

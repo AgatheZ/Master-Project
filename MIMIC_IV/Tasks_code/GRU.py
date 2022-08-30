@@ -5,10 +5,8 @@ import warnings
 import numbers 
 import math 
 
-
 is_cuda = torch.cuda.is_available()
 
-# If we have a GPU available, we'll set our device to GPU. We'll use this device variable later in our code.
 if is_cuda:
     device = torch.device("cuda")
 else:
