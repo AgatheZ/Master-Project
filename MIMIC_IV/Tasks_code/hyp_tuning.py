@@ -2,17 +2,15 @@ from hyperopt import fmin, tpe, hp, anneal, Trials, STATUS_OK
 from xgboost import XGBClassifier, XGBRegressor
 from sklearn.metrics import accuracy_score, roc_auc_score, mean_absolute_error,  mean_squared_error
 from sklearn.model_selection import RandomizedSearchCV
-from scipy.stats import randint
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 import numpy as np
 import lightgbm as lgb
 import math
-
-
 import warnings
 warnings.filterwarnings("ignore")
 
 class HypTuning:
+    '''Class for Hyperparameter tuning using Hyperopt'''
     def __init__(self, reg, cv, model_name, X_train, y_train, X_val, y_val, n_iter, random_state):
         self.cv = cv
         self.reg = reg
@@ -54,8 +52,6 @@ class HypTuning:
         'colsample_bytree': hp.uniform('colsample_by_tree', 0.6, 1.0),
         'min_child_weight': hp.uniform('min_child_weight', 1, 5), 
     }
-
-
 
     def objective(self, space):
         if self.reg:
@@ -114,8 +110,6 @@ class HypTuning:
                 clf.fit(self.X_train, self.y_train,
                     eval_set=evaluation, eval_metric="auc", verbose=False)
             
-                
-
             pred = clf.predict(self.X_val)
             pred_proba = clf.predict_proba(self.X_val)[:,1]
             accuracy = accuracy_score(self.y_val, pred>0.5)
@@ -124,7 +118,6 @@ class HypTuning:
             return {'loss': -auroc, 'status': STATUS_OK}
 
     def optimisation(self):
-        
         trials = Trials()
         objective = self.objective
         best_hyperparams = fmin(fn = objective,
@@ -145,9 +138,6 @@ class HypTuning:
                 n_jobs=-1, cv=self.cv, verbose=True, random_state=self.random_state)
 
         rs.fit(self.X_train, self.y_train)
-
         # rs_test_score = roc_auc_score(self.y_val, rs.predict(self.X_val))
-
         print("Best AUROC {:.3f} params {}".format(-rs.best_score_, rs.best_params_))
-
         return rs.best_params_

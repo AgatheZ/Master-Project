@@ -19,45 +19,40 @@ nb_hours = 48 #Consider 24 or 48 first hours of data
 random_state = 1 #random seed
 TBI_split = True #Whether the cohort should be split in severe/mild or not
 tuning = False #Whether hyperparameter tuning is done
-SHAP = False #Whether SHAP values are displayed 
-imputation = 'carry_forward' #Imputation method
-model_name = 'LightGBM' #Model 
+SHAP = True #Whether SHAP values are displayed 
+imputation = 'No' #Imputation method
+model_name = 'XGBoost' #Model 
 threshold = 4 #LOS threshold value
 
 assert model_name in ['RF', 'XGBoost', 'LightGBM', 'Stacking'], "Please specify a valid model name"
 assert imputation in ['No', 'carry_forward', 'linear', 'multivariate'], "Please specify a valid imputation method"
 
-##data loading 
-df_hourly = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_hour_std.csv', delimiter=',').sort_values(by=['stay_id'])
-df_24h = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_24hour.csv', delimiter=',').sort_values(by=['stay_id'])
-df_48h = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_48hour.csv', delimiter=',').sort_values(by=['stay_id'])
-df_med = pd.read_csv(r"C:\Users\USER\OneDrive\Summer_project\Azure\data\preprocessed_mimic4_med.csv", delimiter=',').sort_values(by=['stay_id'])
-df_demographic = pd.read_csv(r"C:\Users\USER\OneDrive\Summer_project\Azure\data\demographics_mimic4.csv", delimiter=',').sort_values(by=['stay_id'])
-features = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\Master-Project\MIMIC_IV\resources\features.csv', header = None)
-diag = pd.read_csv(r'C:\Users\USER\OneDrive\Summer_project\Azure\data\mimiciv_diag.csv')
-print('Data Loading - done')
+##data loading --- the csv files are in the drive provided 
+df_hourly = pd.read_csv('preprocessed_mimic4_hour_std.csv', delimiter=',').sort_values(by=['stay_id'])
+df_24h = pd.read_csv('preprocessed_mimic4_24hour.csv', delimiter=',').sort_values(by=['stay_id'])
+df_48h = pd.read_csv('preprocessed_mimic4_48hour.csv', delimiter=',').sort_values(by=['stay_id'])
+df_med = pd.read_csv("preprocessed_mimic4_med.csv", delimiter=',').sort_values(by=['stay_id'])
+df_demographic = pd.read_csv("demographics_mimic4.csv", delimiter=',').sort_values(by=['stay_id'])
+diag = pd.read_csv('mimiciv_diag.csv')
 
-##features names for SHAP values
-if nb_hours == 24:
-   features = features.loc[:224,2] 
-else:
-   features = features.loc[:,0]
+print('Data Loading - done')
 
 
 #Preprocessing
 pr = Preprocessing(df_hourly, df_24h, df_48h, df_med, df_demographic, nb_hours, TBI_split, random_state, imputation, diag)
 
 if TBI_split:
-   final_data_mild, final_data_severe, labels_mild, labels_severe = pr.preprocess_data(threshold)
+   final_data_mild, final_data_severe, labels_mild, labels_severe, features = pr.preprocess_data(threshold)
 else:
-   final_data, labels = pr.preprocess_data(threshold)
+   final_data, labels, features = pr.preprocess_data(threshold)
+
 
 print('Data Preprocessing - done')
-
 if TBI_split:
-   strat = final_data_severe[:,-2]
+   strat = final_data_severe[:,3]
 else:
-   strat = final_data[:,-2]
+   strat = final_data[:,3]
+
 ##Data split with death stratification
 if TBI_split:
    X_train, X_test, y_train, y_test = train_test_split(final_data_severe, labels_severe, test_size=0.2, shuffle = True, random_state=random_state)
@@ -77,12 +72,16 @@ if not TBI_split:
    counter = Counter(labels)
    # estimate scale_pos_weight value
    estimate = counter[0] / counter[1]
+else:
+   counter = Counter(labels_severe)
+   # estimate scale_pos_weight value
+   estimate = counter[0] / counter[1]
 
 ##Best hyperparameter found for the different models
 if model_name == 'XGBoost':
    if TBI_split:
-      best_param_mild = {'alpha': 0.0, 'colsample_bytree': 0.5404929749427543, 'eta': 0.08602706957522405, 'gamma': 1.8786165006154019, 'max_depth': 17.0, 'min_child_weight': 3.0}
-      best_param_severe = {'alpha': 13.0, 'colsample_bytree': 0.6268493181974919, 'eta': 0.03821439650403947, 'gamma': 0.4555031107284915, 'max_depth': 15.0, 'min_child_weight': 10.0}
+      best_param_mild = {'alpha': 0.0, 'colsample_bytree': 0.7944489162174009, 'eta': 0.03783520485150966, 'gamma': 0.9245079076024777, 'max_depth': 15.0, 'min_child_weight': 0.0}
+      best_param_severe = {'alpha': 0.0, 'colsample_bytree': 0.5566668059186075, 'eta': 0.252886125308837, 'gamma': 1.888659757012347, 'max_depth': 12.0, 'min_child_weight': 7.0}
       best_param = best_param_severe
    else:
       if nb_hours == 24:
@@ -90,7 +89,8 @@ if model_name == 'XGBoost':
          best_param_imput = {'alpha': 3.0, 'colsample_bytree': 0.5359922767597586, 'eta': 0.14476892774894637, 'gamma': 2.3216870446364952, 'max_depth': 18.0, 'min_child_weight': 1.0}
          best_param_carry_forw = {}
       else:
-         best_param = {'alpha': 0.0, 'colsample_bytree': 0.7336138546940976, 'eta': 0.3108407290269413, 'gamma': 2.3874687080350965, 'max_depth': 10.0, 'min_child_weight': 4.0}
+        best_param = {'alpha': 12.0, 'colsample_bytree': 0.5265548343516888, 'eta': 0.10955899500196617, 'gamma': 3.7037045423905743, 'max_depth': 15, 'min_child_weight': 8.0}
+
    depth = best_param['max_depth']
 
 

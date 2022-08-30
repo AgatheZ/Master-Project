@@ -38,7 +38,6 @@ class VAE(nn.Module):
         self.lin_bn5 = nn.BatchNorm1d(num_features=H)
         self.linear6=nn.Linear(H,D_in)
         self.lin_bn6 = nn.BatchNorm1d(num_features=D_in)
-        
         self.relu = nn.ReLU()
         
     def encode(self, x):
@@ -48,10 +47,8 @@ class VAE(nn.Module):
         lin3 = self.relu(self.lin_bn3(self.linear3(lin2)))
 
         fc1 = F.relu(self.bn1(self.fc1(lin3)))
-
         r1 = self.fc21(fc1)
         r2 = self.fc22(fc1)
-        
         return r1, r2
     
     def reparameterize(self, mu, logvar):
@@ -77,9 +74,7 @@ class VAE(nn.Module):
         return self.decode(z), mu, logvar
 
     def loss_function_VAE(self, recon_x, x, mu, logvar, beta=5):
-
         # Assume Bernoulli distribution
-        # Therefore our negative log likelihood is binary cross entropy
         self.mse_loss = nn.MSELoss(reduction="sum")
         loss_MSE = self.mse_loss(recon_x, x)
         loss_KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())

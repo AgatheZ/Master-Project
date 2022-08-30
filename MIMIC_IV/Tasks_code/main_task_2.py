@@ -24,9 +24,9 @@ random_state = 1
 TBI_split = False
 tuning = False
 SHAP = True
-imputation = 'linear'
+imputation = 'carry_forward'
 model_name = 'LightGBM'
-task = 'ABPd'
+task = 'ABPs'
 
 assert model_name in ['RF', 'XGBoost', 'LightGBM', 'Stacking'], "Please specify a valid model name"
 assert imputation in ['No','carry_forward', 'linear', 'multivariate'], "Please specify a valid imputation method"
@@ -45,7 +45,6 @@ if nb_hours == 24:
 else:
    features = features.loc[:,0]
 
-print(features)
 
 #Preprocessing
 pr = Preprocessing(df_hourly, df_24h, df_48h, df_med, df_demographic, nb_hours, TBI_split, random_state, imputation)
@@ -177,8 +176,23 @@ pred = model.predict(X_test)
 # plt.ylabel('ABPm (mmHg)')
 
 
-plt.show()
 
-eval = Evaluation(True, model, 'Tuned ' + model_name, final_data, labels, random_state, SHAP, features, nb_hours)
-eval.evaluate_regression()
+true = y_test - X_test[:,6+24+24+24]
+print(X_test[:,6+24].shape)
+preds = pred - X_test[:,6+24+24+24]
+tp,tn,fp,fn = 0,0,0,0
+for i in range(len(true)):
+    if preds[i] > 0 and true[i]>0:
+        tp+=1
+    if preds[i] < 0 and true[i]<0:
+        tn+=1
+    if preds[i] > 0 and true[i]<0:
+        fp+=1
+    if preds[i] < 0 and true[i]>0:
+        fn+=1
+        
+print(tp,tn,fp,fn)
+
+# eval = Evaluation(True, model, 'Tuned ' + model_name, final_data, labels, random_state, SHAP, features, nb_hours)
+# eval.evaluate_regression()
 
