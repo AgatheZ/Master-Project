@@ -465,7 +465,7 @@ class Preprocessing:
         self.df_hourly_copy = self.df_hourly.reset_index(level=['hour_from_intime'])
         labels = self.df_hourly_copy[self.df_hourly_copy.hour_from_intime.isin(range(25,25+window))][label]
         
-        print('HELLLOOOO')
+        
         print(labels)
 
 
