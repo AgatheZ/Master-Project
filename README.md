@@ -1,5 +1,6 @@
 # Machine Learning on temporal data from ICU and chronic disease to predict future values and outcomes
 
+This repository contains the code associated with my MSc project. Two main challenges are adressed: (1) Predict Traumatic Brain Injury patients outcomes using the MIMIC-IV database, (2) Conduct a survival analysis of Chronic pulmonary aspergillosis (CPA) patients using numerical features extracted from CT-scans.
 
 ## **Additional_analysis**
 
