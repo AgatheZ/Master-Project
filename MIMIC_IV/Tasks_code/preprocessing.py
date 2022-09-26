@@ -80,6 +80,9 @@ class Preprocessing:
                 batch_hourly[i] = batch_hourly[i].fillna(hourly_mean)
                 batch_demographic[i].bmi = batch_demographic[i].bmi.fillna(bmi_mean)
                 batch_demographic[i].gcs = batch_demographic[i].gcs.fillna(gcs_mean)
+                batch_demographic[i] = batch_demographic[i].fillna(0)
+                batch_hourly[i] = batch_hourly[i].fillna(0)
+
             return batch_hourly, batch_24h, batch_48h, batch_med, batch_demographic
 
         if type == 'multivariate': 
@@ -116,6 +119,8 @@ class Preprocessing:
                 batch_hourly[i] = batch_hourly[i].fillna(hourly_mean)
                 batch_demographic[i].bmi = batch_demographic[i].bmi.fillna(bmi_mean)
                 batch_demographic[i].gcs = batch_demographic[i].gcs.fillna(gcs_mean)
+                batch_demographic[i] = batch_demographic[i].fillna(0)
+                batch_hourly[i] = batch_hourly[i].fillna(0)
             return batch_hourly, batch_24h, batch_48h, batch_med, batch_demographic
         
         if type == 'No':
@@ -285,6 +290,8 @@ class Preprocessing:
         for i in range(len(batch_hourly)):
                 data_pr[i] = data_pr[i].fillna(method = "ffill")
                 data_pr[i] = data_pr[i].fillna(mean)
+                data_pr[i] = data_pr[i].fillna(0)
+
 
         if transfer:
             data_mild = np.array([data_pr[i] for i in mild_idx])
@@ -472,6 +479,7 @@ class Preprocessing:
         final_data = np.array([[np.concatenate([np.concatenate(batch_demographic[i].values),  np.concatenate(batch_hourly[i].values)])] for i in range(len(batch_hourly))])
 
         final_data = np.squeeze(final_data)
+     
         return final_data, labels
 
 
